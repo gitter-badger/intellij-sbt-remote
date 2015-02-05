@@ -9,3 +9,5 @@ val commonSettings = Seq(
 )
 
 ideaPluginSettings ++ commonSettings
+
+assemblyExcludedJars in assembly <<= ideaFullJars
