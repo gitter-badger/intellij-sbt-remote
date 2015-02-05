@@ -9,6 +9,14 @@
   <idea-version since-build="139"/>
 
   <extensions defaultExtensionNs="com.intellij">
+    <!--<externalSystemManager implementation=""/>-->
+    <!--<externalProjectDataService implementation=""/>-->
+    <!--<externalSystemTaskNotificationListener implementation=""/>-->
+    <!--<projectService serviceImplementation=""/>-->
+    <!--<projectImportProvider implementation=""/>-->
+    <!--<projectImportBuilder implementation=""/>-->
+    <!--<projectConfigurable groupId="build.tools" key="sbt.remote.name" bundle="com.dancingrobot84.sbt.remote.Bundle" -->
+                         <!--instance="" />-->
   </extensions>
 
 </idea-plugin>
