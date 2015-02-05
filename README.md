@@ -6,4 +6,4 @@ SBT support plugin for Intellij IDEA via sbt-remote-control. WIP.
 
 1. Clone repo, enter SBT REPL
 2. `updateIdea`
-3. `package`
+3. `assembly`
