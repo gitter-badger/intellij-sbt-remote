@@ -5,9 +5,12 @@ val commonSettings = Seq(
   scalaVersion := "2.11.5",
   javacOptions ++= Seq("-source 1.6", "-target 1.6"),
   scalacOptions ++= Seq("-target:jvm-1.6", "-deprecation", "-feature"),
-  ideaVersion := "14.0.3"
+  ideaVersion := "14.0.3",
+  assemblyExcludedJars in assembly <<= ideaFullJars
 )
 
 ideaPluginSettings ++ commonSettings
 
-assemblyExcludedJars in assembly <<= ideaFullJars
+libraryDependencies ++= Seq(
+  "com.typesafe.sbtrc" % "client-2-11" % "1.0-M2"
+)
