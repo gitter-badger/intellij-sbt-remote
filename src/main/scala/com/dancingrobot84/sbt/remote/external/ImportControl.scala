@@ -1,7 +1,7 @@
 package com.dancingrobot84.sbt.remote.external
 
 import com.intellij.openapi.externalSystem.service.settings.AbstractImportFromExternalSystemControl
-import com.intellij.openapi.externalSystem.util.{PaintAwarePanel, ExternalSystemSettingsControl}
+import com.intellij.openapi.externalSystem.util.{ExternalSystemSettingsControl, PaintAwarePanel}
 import com.intellij.openapi.project.ProjectManager
 
 /**

@@ -1,6 +1,6 @@
 package com.dancingrobot84.sbt.remote.external
 
-import com.intellij.openapi.externalSystem.model.task.{ExternalSystemTaskNotificationListener, ExternalSystemTaskId}
+import com.intellij.openapi.externalSystem.model.task.{ExternalSystemTaskId, ExternalSystemTaskNotificationListener}
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 
 /**

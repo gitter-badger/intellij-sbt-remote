@@ -1,10 +1,12 @@
 package com.dancingrobot84.sbt.remote
 
 import _root_.java.lang.{Boolean => JavaBoolean}
+
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.util.{Pair => IdeaPair}
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.{Function => IdeaFunction}
+
 import scala.language.implicitConversions
 
 /**

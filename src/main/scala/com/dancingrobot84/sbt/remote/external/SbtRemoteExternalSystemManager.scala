@@ -1,4 +1,5 @@
-package com.dancingrobot84.sbt.remote.external
+package com.dancingrobot84.sbt.remote
+package external
 
 import java.net.URL
 
@@ -40,5 +41,9 @@ final class SbtRemoteExternalSystemManager
 
   def enhanceLocalProcessing(urls: java.util.List[URL]): Unit = {}
 
-  def enhanceRemoteProcessing(parameters: SimpleJavaParameters): Unit = {}
+  def enhanceRemoteProcessing(parameters: SimpleJavaParameters): Unit = {
+    Option(System.getProperty(Bundle("sbt.remote.debug.port"))).foreach { port =>
+      parameters.getVMParametersList.add(s"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=$port")
+    }
+  }
 }

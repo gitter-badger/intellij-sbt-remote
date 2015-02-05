@@ -4,7 +4,7 @@ package com.dancingrobot84.sbt.remote.external
 import com.intellij.openapi.components._
 import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutionSettings
 import com.intellij.openapi.externalSystem.service.project.PlatformFacade
-import com.intellij.openapi.externalSystem.settings.{AbstractExternalSystemLocalSettings, ExternalSystemSettingsListener, ExternalProjectSettings, AbstractExternalSystemSettings}
+import com.intellij.openapi.externalSystem.settings.{AbstractExternalSystemLocalSettings, AbstractExternalSystemSettings, ExternalProjectSettings, ExternalSystemSettingsListener}
 import com.intellij.openapi.project.Project
 import com.intellij.util.containers.ContainerUtilRt
 import com.intellij.util.messages.{Topic => ExternalSystemTopic}
