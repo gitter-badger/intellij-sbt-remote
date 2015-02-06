@@ -11,6 +11,8 @@ val commonSettings = Seq(
 
 ideaPluginSettings ++ commonSettings
 
+resolvers += Resolver.typesafeIvyRepo("releases")
+
 libraryDependencies ++= Seq(
   "com.typesafe.sbtrc" % "client-2-11" % "1.0-M2"
 )
