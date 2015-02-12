@@ -35,15 +35,10 @@ final class SbtRemoteExternalSystemManager
       super.isFileSelectable(file) && ImportUtil.canImportFrom(file)
   }
 
-  def getExecutionSettingsProvider = { (project: Project, path: String) =>
-    new ExecutionSettings
-  }
+  def getExecutionSettingsProvider =
+    { (project: Project, path: String) => new ExecutionSettings }
 
   def enhanceLocalProcessing(urls: java.util.List[URL]): Unit = {}
 
-  def enhanceRemoteProcessing(parameters: SimpleJavaParameters): Unit = {
-    Option(System.getProperty(Bundle("sbt.remote.debug.port"))).foreach { port =>
-      parameters.getVMParametersList.add(s"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=$port")
-    }
-  }
+  def enhanceRemoteProcessing(parameters: SimpleJavaParameters): Unit = {}
 }
