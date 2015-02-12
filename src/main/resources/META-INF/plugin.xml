@@ -1,22 +1,19 @@
 <idea-plugin version="2">
-  <id>com.dancingrobot84.intellij-sbt-remote</id>
-  <name>Intellij SBT Remote</name>
-  <version>1.0</version>
-  <vendor email="dancingrobot84@gmail.com" url="http://dancingrobot84.com">Nikolay Obedin</vendor>
+    <id>com.dancingrobot84.intellij-sbt-remote</id>
+    <name>Intellij SBT Remote</name>
+    <version>1.0</version>
+    <vendor email="dancingrobot84@gmail.com" url="http://dancingrobot84.com">Nikolay Obedin</vendor>
 
-  <description>SBT support plugin for Intellij IDEA via sbt-remote-control</description>
+    <description>SBT support plugin for Intellij IDEA via sbt-remote-control</description>
 
-  <idea-version since-build="139"/>
+    <idea-version since-build="139"/>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.SbtRemoteExternalSystemManager"/>
-    <!--<externalProjectDataService implementation=""/>-->
-    <!--<externalSystemTaskNotificationListener implementation=""/>-->
-    <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.SystemSettings"/>
-    <projectImportProvider implementation="com.dancingrobot84.sbt.remote.external.ProjectImportProvider"/>
-    <projectImportBuilder implementation="com.dancingrobot84.sbt.remote.external.ProjectImportBuilder"/>
-    <!--<projectConfigurable groupId="build.tools" key="sbt.remote.name" bundle="com.dancingrobot84.sbt.remote.Bundle" -->
-                         <!--instance="" />-->
-  </extensions>
+    <extensions defaultExtensionNs="com.intellij">
+        <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.SbtRemoteExternalSystemManager"/>
+        <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.SystemSettings"/>
+        <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.LocalSettings"/>
+        <projectImportProvider implementation="com.dancingrobot84.sbt.remote.external.ProjectImportProvider"/>
+        <projectImportBuilder implementation="com.dancingrobot84.sbt.remote.external.ProjectImportBuilder"/>
+    </extensions>
 
 </idea-plugin>

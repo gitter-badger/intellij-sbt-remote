@@ -15,7 +15,7 @@ import com.intellij.util.messages.{Topic => ExternalSystemTopic}
  */
 
 @State(
-  name = "SbtRemoteSettings",
+  name = "SbtRemoteSystemSettings",
   storages = Array(
     new Storage(file = StoragePathMacros.PROJECT_FILE),
     new Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/sbt-remote.xml",
@@ -72,11 +72,31 @@ object ProjectSettings {
   def apply() = new ProjectSettings
 }
 
-final class LocalSettings(platformFacade: PlatformFacade, project: Project)
+@State(
+  name = "SbtRemoteLocalSettings",
+  storages = Array(
+    new Storage(file = StoragePathMacros.WORKSPACE_FILE)
+  )
+)
+final class LocalSettings(project: Project, platformFacade: PlatformFacade)
   extends AbstractExternalSystemLocalSettings(Id, project, platformFacade)
+  with PersistentStateComponent[LocalSettings.State] {
+
+  def getState = {
+    val s = new LocalSettings.State
+    fillState(s)
+    s
+  }
+
+  def loadState(state: LocalSettings.State): Unit =
+    super[AbstractExternalSystemLocalSettings].loadState(state)
+}
 
 object LocalSettings {
   def apply(project: Project) = ServiceManager.getService(project, classOf[LocalSettings])
+
+  final class State
+    extends AbstractExternalSystemLocalSettings.State
 }
 
 final class ExecutionSettings
