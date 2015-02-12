@@ -8,6 +8,12 @@
 
     <idea-version since-build="139"/>
 
+    <application-components>
+        <component>
+            <implementation-class>com.dancingrobot84.sbt.remote.misc.StartupRoutines</implementation-class>
+        </component>
+    </application-components>
+
     <extensions defaultExtensionNs="com.intellij">
         <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.SbtRemoteExternalSystemManager"/>
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.SystemSettings"/>
