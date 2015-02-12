@@ -14,7 +14,7 @@ import scala.language.implicitConversions
  * @since 2/5/15.
  */
 package object external {
-  val Id = new ProjectSystemId(Bundle("sbt.remote.name"), Bundle("sbt.remote.name"))
+  val Id = new ProjectSystemId(Bundle("sbt.remote.id"), Bundle("sbt.remote.name"))
 
   implicit def toIdeaFunction1[A, B](f: A => B): IdeaFunction[A, B] =
     new IdeaFunction[A, B] {
