@@ -15,7 +15,7 @@
     </application-components>
 
     <extensions defaultExtensionNs="com.intellij">
-        <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.SbtRemoteExternalSystemManager"/>
+        <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.ExternalSystemManager"/>
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.SystemSettings"/>
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.LocalSettings"/>
         <projectImportProvider implementation="com.dancingrobot84.sbt.remote.external.ProjectImportProvider"/>

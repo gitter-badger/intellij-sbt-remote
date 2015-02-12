@@ -5,7 +5,7 @@ import java.net.URL
 
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.ide.actions.OpenProjectFileChooserDescriptor
-import com.intellij.openapi.externalSystem.ExternalSystemManager
+import com.intellij.openapi.externalSystem.{ExternalSystemManager => IdeaExternalSystemManager}
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 
@@ -13,8 +13,12 @@ import com.intellij.openapi.vfs.VirtualFile
  * @author Nikolay Obedin
  * @since 2/5/15.
  */
-final class SbtRemoteExternalSystemManager
-  extends ExternalSystemManager[ProjectSettings, ProjectSettingsListener, SystemSettings, LocalSettings, ExecutionSettings] {
+final class ExternalSystemManager
+  extends IdeaExternalSystemManager[ProjectSettings,
+                                    ProjectSettingsListener,
+                                    SystemSettings,
+                                    LocalSettings,
+                                    ExecutionSettings] {
 
   def getSystemId = Id
 
