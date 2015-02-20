@@ -43,6 +43,8 @@ object Path {
   case class TestResource(base: File) extends Path
   case class GenTestResource(base: File) extends Path
   case class Exclude(base: File) extends Path
+  case class Output(base: File) extends Path
+  case class TestOutput(base: File) extends Path
 }
 
 sealed trait Dependency

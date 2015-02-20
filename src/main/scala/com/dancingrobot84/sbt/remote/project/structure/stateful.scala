@@ -64,6 +64,7 @@ class StatefulModule(val base: File, @volatile var name: String) extends Module 
       new ModuleData(name, external.Id, StdModuleTypes.JAVA.getId,
         name, ideModulePath, base.getAbsolutePath),
       parent)
+    moduleNode.getData(ProjectKeys.MODULE).setInheritProjectCompileOutputPath(false)
 
     moduleNode.addChild(paths.toDataNode(moduleNode))
     moduleNode
@@ -78,7 +79,8 @@ object Helpers {
 
   implicit class RichSeqOfPath(paths: Seq[Path]) {
     def toDataNode(parent: DataNode[ModuleData]): DataNode[ContentRootData] = {
-      val base = parent.getData(ProjectKeys.MODULE).getLinkedExternalProjectPath
+      val module = parent.getData(ProjectKeys.MODULE)
+      val base = module.getLinkedExternalProjectPath
       val data = new ContentRootData(external.Id, base)
       paths.foreach {
         case Path.Source(path) =>
@@ -99,6 +101,10 @@ object Helpers {
           data.storePath(ExternalSystemSourceType.TEST_RESOURCE, path.getAbsolutePath)
         case Path.Exclude(path) =>
           data.storePath(ExternalSystemSourceType.EXCLUDED, path.getAbsolutePath)
+        case Path.Output(path) =>
+          module.setCompileOutputPath(ExternalSystemSourceType.SOURCE, path.getAbsolutePath)
+        case Path.TestOutput(path) =>
+          module.setCompileOutputPath(ExternalSystemSourceType.TEST, path.getAbsolutePath)
       }
       new DataNode(ProjectKeys.CONTENT_ROOT, data, parent)
     }

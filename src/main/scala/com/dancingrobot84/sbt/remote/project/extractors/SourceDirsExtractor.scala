@@ -24,14 +24,14 @@ class SourceDirsExtractor extends Extractor.Adapter {
     val initPromise = Promise[Unit]()
 
     val watchers = Map(
-      "unmanagedSourceDirectories"          -> pathWatcher(Path.Source) _,
-      "managedSourceDirectories"            -> pathWatcher(Path.GenSource) _,
-      "test:unmanagedSourceDirectories"     -> pathWatcher(Path.TestSource) _,
-      "test:managedSourceDirectories"       -> pathWatcher(Path.GenTestSource) _,
-      "unmanagedResourceDirectories"        -> pathWatcher(Path.Resource) _,
-      "managedResourceDirectories"          -> pathWatcher(Path.GenResource) _,
-      "test:unmanagedResourceDirectories"   -> pathWatcher(Path.TestResource) _,
-      "test:managedResourceDirectories"     -> pathWatcher(Path.GenTestResource) _
+      "unmanagedSourceDirectories"          -> pathsWatcher(Path.Source) _,
+      "managedSourceDirectories"            -> pathsWatcher(Path.GenSource) _,
+      "test:unmanagedSourceDirectories"     -> pathsWatcher(Path.TestSource) _,
+      "test:managedSourceDirectories"       -> pathsWatcher(Path.GenTestSource) _,
+      "unmanagedResourceDirectories"        -> pathsWatcher(Path.Resource) _,
+      "managedResourceDirectories"          -> pathsWatcher(Path.GenResource) _,
+      "test:unmanagedResourceDirectories"   -> pathsWatcher(Path.TestResource) _,
+      "test:managedResourceDirectories"     -> pathsWatcher(Path.GenTestResource) _
     )
 
     def callWatcher[T](watcher: ValueListener[T])(results: Seq[WatchResult[T]]) =
@@ -41,10 +41,17 @@ class SourceDirsExtractor extends Extractor.Adapter {
       .map(callWatcher(baseDirWatcher))
       .flatMap { _ =>
         Future.sequence {
-          for {
+          val sourceFutures = for {
             (key, watcher) <- watchers
             f = watchSettingKey[Seq[File]](key)(watcher)
           } yield f.map(callWatcher(watcher))
+
+          sourceFutures.toSeq ++ Seq(
+            watchSettingKey[File]("classDirectory")(pathWatcher(Path.Output))
+              .map(callWatcher(pathWatcher(Path.Output))),
+            watchSettingKey[File]("test:classDirectory")(pathWatcher(Path.TestOutput))
+              .map(callWatcher(pathWatcher(Path.TestOutput)))
+          )
         }
       }
       .onComplete(_ => initPromise.success(()))
@@ -64,13 +71,24 @@ class SourceDirsExtractor extends Extractor.Adapter {
       ctx.logger.error("Failed retrieving 'baseDirectory' key", exc)
   }
 
-  private def pathWatcher(pathTrans: File => Path)(key: ScopedKey, result: Try[Seq[File]]): Unit = result match {
+  private def pathsWatcher(pathTrans: File => Path)(key: ScopedKey, result: Try[Seq[File]]): Unit = result match {
     case Success(sources) => key.scope.project.foreach { p =>
       if (p.build == ctx.project.base && projects.contains(p)) {
         sources.foreach { s =>
           ctx.logger.info(s"Got path '$s' for module ${p.name}")
           ctx.project.findModule(p.name).foreach(_.addPath(pathTrans(s)))
         }
+      }
+    }
+    case Failure(exc) =>
+      ctx.logger.error(s"Failed retrieving '$key' key", exc)
+  }
+
+  private def pathWatcher(pathTrans: File => Path)(key: ScopedKey, result: Try[File]): Unit = result match {
+    case Success(path) => key.scope.project.foreach { p =>
+      if (p.build == ctx.project.base && projects.contains(p)) {
+        ctx.logger.info(s"Got path '$path' for module ${p.name}")
+        ctx.project.findModule(p.name).foreach(_.addPath(pathTrans(path)))
       }
     }
     case Failure(exc) =>
