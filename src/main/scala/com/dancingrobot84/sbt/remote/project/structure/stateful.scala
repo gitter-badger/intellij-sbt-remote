@@ -80,31 +80,26 @@ object Helpers {
   implicit class RichSeqOfPath(paths: Seq[Path]) {
     def toDataNode(parent: DataNode[ModuleData]): DataNode[ContentRootData] = {
       val module = parent.getData(ProjectKeys.MODULE)
-      val base = module.getLinkedExternalProjectPath
-      val data = new ContentRootData(external.Id, base)
+      val data = new ContentRootData(external.Id, module.getLinkedExternalProjectPath)
       paths.foreach {
-        case Path.Source(path) =>
-          data.storePath(ExternalSystemSourceType.SOURCE, path.getAbsolutePath)
-        case Path.GenSource(path) =>
-          data.storePath(ExternalSystemSourceType.SOURCE_GENERATED, path.getAbsolutePath)
-        case Path.TestSource(path) =>
-          data.storePath(ExternalSystemSourceType.TEST, path.getAbsolutePath)
-        case Path.GenTestSource(path) =>
-          data.storePath(ExternalSystemSourceType.TEST_GENERATED, path.getAbsolutePath)
-        case Path.Resource(path) =>
-          data.storePath(ExternalSystemSourceType.RESOURCE, path.getAbsolutePath)
-        case Path.GenResource(path) =>
-          data.storePath(ExternalSystemSourceType.RESOURCE, path.getAbsolutePath)
-        case Path.TestResource(path) =>
-          data.storePath(ExternalSystemSourceType.TEST_RESOURCE, path.getAbsolutePath)
-        case Path.GenTestResource(path) =>
-          data.storePath(ExternalSystemSourceType.TEST_RESOURCE, path.getAbsolutePath)
-        case Path.Exclude(path) =>
-          data.storePath(ExternalSystemSourceType.EXCLUDED, path.getAbsolutePath)
-        case Path.Output(path) =>
-          module.setCompileOutputPath(ExternalSystemSourceType.SOURCE, path.getAbsolutePath)
-        case Path.TestOutput(path) =>
-          module.setCompileOutputPath(ExternalSystemSourceType.TEST, path.getAbsolutePath)
+        case Path.Source(base) =>
+          data.storePath(ExternalSystemSourceType.SOURCE, base.getAbsolutePath)
+        case Path.GenSource(base) =>
+          data.storePath(ExternalSystemSourceType.SOURCE_GENERATED, base.getAbsolutePath)
+        case Path.TestSource(base) =>
+          data.storePath(ExternalSystemSourceType.TEST, base.getAbsolutePath)
+        case Path.GenTestSource(base) =>
+          data.storePath(ExternalSystemSourceType.TEST_GENERATED, base.getAbsolutePath)
+        case path@(Path.Resource(_) | Path.GenResource(_))=>
+          data.storePath(ExternalSystemSourceType.RESOURCE, path.base.getAbsolutePath)
+        case path@(Path.TestResource(_) | Path.GenTestResource(_)) =>
+          data.storePath(ExternalSystemSourceType.TEST_RESOURCE, path.base.getAbsolutePath)
+        case Path.Exclude(base) =>
+          data.storePath(ExternalSystemSourceType.EXCLUDED, base.getAbsolutePath)
+        case Path.Output(base) =>
+          module.setCompileOutputPath(ExternalSystemSourceType.SOURCE, base.getAbsolutePath)
+        case Path.TestOutput(base) =>
+          module.setCompileOutputPath(ExternalSystemSourceType.TEST, base.getAbsolutePath)
       }
       new DataNode(ProjectKeys.CONTENT_ROOT, data, parent)
     }

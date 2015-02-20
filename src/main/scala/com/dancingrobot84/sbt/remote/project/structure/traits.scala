@@ -32,7 +32,10 @@ trait Library {
 
 case class LibraryId(organization: String, name: String, version: String)
 
-sealed trait Path
+sealed trait Path {
+  val base: File
+}
+
 object Path {
   case class Source(base: File) extends Path
   case class GenSource(base: File) extends Path
