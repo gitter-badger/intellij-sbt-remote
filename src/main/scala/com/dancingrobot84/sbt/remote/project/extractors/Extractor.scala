@@ -72,7 +72,7 @@ object Extractor {
 
     def attach(context: Context): (Future[Unit], Subscription) = {
       ctx = context
-      var future: Future[Unit] = null
+      val initPromise = Promise[Unit]()
 
       addSubscription(ctx.client.watchBuild { case MinimalBuildStructure(builds, allProjects) =>
         val buildOpt = builds.find(_ == ctx.project.base).headOption
@@ -85,14 +85,14 @@ object Extractor {
           if(projects.isEmpty)
             ctx.logger.error("No suitable modules found")
           else
-            future = doAttach()
+            doAttach().onComplete(initPromise.complete)
 
         }.getOrElse {
           ctx.logger.error("No project found")
         }
       })
 
-      (future, new Subscription {
+      (initPromise.future, new Subscription {
         override def cancel(): Unit =
           subscriptions.foreach(_.cancel())
       })
