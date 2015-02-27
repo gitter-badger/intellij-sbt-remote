@@ -51,8 +51,12 @@ class ProjectResolver
       val (initFuture, _) = new SourceDirsExtractor().attach(Extractor.Context(client, project, Log))
 
       initFuture.onComplete {
-        case Success(_)   => projectPromise.success(project.toDataNode)
-        case Failure(err) => projectPromise.failure(err)
+        case Success(_)   =>
+          new DependenciesExtractor().attach(Extractor.Context(client, project, Log))._1.onComplete { _ =>
+            projectPromise.success(project.toDataNode)
+          }
+        case Failure(err) =>
+          projectPromise.failure(err)
       }
     }, { (reconnect, reason) =>
       if (reconnect)
