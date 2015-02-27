@@ -18,6 +18,7 @@ import scala.collection.mutable
 class StatefulProject(val base: URI, @volatile var name: String) extends Project {
   private val modules   = mutable.Buffer.empty[StatefulModule]
   private val libraries = mutable.Buffer.empty[StatefulLibrary]
+  private val dependencies = mutable.Set.empty[(StatefulModule, Dependency)]
 
   def addModule(id: String, base: File) = this.synchronized {
     findModule(id).getOrElse {
@@ -51,36 +52,84 @@ class StatefulProject(val base: URI, @volatile var name: String) extends Project
     findLibrary(id).foreach(libraries -= _)
   }
 
+  def addDependency(moduleId: String, dependency: Dependency) = this.synchronized {
+    findModule(moduleId).foreach { m =>
+      dependencies += Tuple2(m, dependency)
+    }
+  }
+
+  def removeDependency(moduleId: String, dependency: Dependency) = this.synchronized {
+    findModule(moduleId).foreach { m =>
+      dependencies -= Tuple2(m, dependency)
+    }
+  }
+
   def toDataNode: DataNode[ProjectData] = {
     val baseFile = new File(base)
     val projectNode = new DataNode(
       ProjectKeys.PROJECT,
       new ProjectData(external.Id, name, baseFile.getAbsolutePath, baseFile.getAbsolutePath),
       null)
-    libraries.map(_.toDataNode(projectNode)).foreach(projectNode.addChild)
-    modules.map(_.toDataNode(projectNode)).foreach(projectNode.addChild)
+
+    val libraryNodes = libraries.map(_.toDataNode(projectNode))
+    val moduleNodes = modules.map(_.toDataNode(projectNode))
+
+    dependencies.foreach { case (module, dependency) =>
+      dependency match {
+        case Dependency.Library(libId, conf) =>
+          for {
+            moduleNode <- moduleNodes
+            if moduleNode.getData.getId == module.id
+            libraryNode <- libraryNodes
+            if libraryNode.getData.getExternalName == libId.toString
+          } {
+            val libDepData = new LibraryDependencyData(moduleNode.getData, libraryNode.getData, LibraryLevel.PROJECT)
+            conf match {
+              case Configuration.Compile => libDepData.setScope(DependencyScope.COMPILE)
+              case Configuration.Test => libDepData.setScope(DependencyScope.TEST)
+              case _ => // TODO: implement
+            }
+            moduleNode.addChild(new DataNode(ProjectKeys.LIBRARY_DEPENDENCY, libDepData, moduleNode))
+          }
+        case Dependency.Module(depBase, conf) =>
+          for {
+            dependentNode <- moduleNodes
+            if dependentNode.getData.getId == module.id
+            masterModule <- modules.filter(_.hasPath(Path.Output(depBase)))
+            masterNode   <- moduleNodes
+            if masterNode.getData.getId == masterModule.id
+          } {
+            val moduleDepData = new ModuleDependencyData(dependentNode.getData, masterNode.getData)
+            conf match {
+              case Configuration.Compile => moduleDepData.setScope(DependencyScope.COMPILE)
+              case Configuration.Test => moduleDepData.setScope(DependencyScope.TEST)
+              case _ => // TODO: implement
+            }
+            dependentNode.addChild(new DataNode(ProjectKeys.MODULE_DEPENDENCY, moduleDepData, dependentNode))
+          }
+        }
+      }
+
+    libraryNodes.foreach(projectNode.addChild)
+    moduleNodes.foreach(projectNode.addChild)
+
     projectNode
   }
 }
 
 class StatefulModule(val base: File, @volatile var id: String, @volatile var name: String) extends Module {
   private val paths = mutable.Set.empty[Path]
-  private val deps  = mutable.Set.empty[Dependency]
 
   def addPath(path: Path) = this.synchronized {
     paths += path
   }
 
+  def hasPath(path: Path) = this.synchronized {
+    paths.contains(path)
+  }
+
   def removePath(path: Path) = this.synchronized {
     paths -= path
-  }
-
-  def addDependency(dependency: Dependency) = this.synchronized {
-    deps += dependency
-  }
-
-  def removeDependency(dependency: Dependency) = this.synchronized {
-    deps -= dependency
   }
 
   def toDataNode(parent: DataNode[ProjectData]): DataNode[ModuleData] = {
@@ -93,25 +142,6 @@ class StatefulModule(val base: File, @volatile var id: String, @volatile var nam
         name, ideModulePath, base.getAbsolutePath)
     val moduleNode = new DataNode(ProjectKeys.MODULE, moduleData, parent)
     moduleData.setInheritProjectCompileOutputPath(false)
-
-    import scala.collection.JavaConverters._
-    deps.foreach {
-      case Dependency.Library(libId, conf) =>
-        for {
-          node <- parent.getChildren.asScala
-          lib  <- Option(node.getData(ProjectKeys.LIBRARY))
-          if lib.getExternalName == libId.toString
-        } {
-          val libDepData = new LibraryDependencyData(moduleData, lib, LibraryLevel.PROJECT)
-          conf match {
-            case Configuration.Compile => libDepData.setScope(DependencyScope.COMPILE)
-            case Configuration.Test => libDepData.setScope(DependencyScope.TEST)
-            case _ => // TODO: implement
-          }
-          moduleNode.addChild(new DataNode(ProjectKeys.LIBRARY_DEPENDENCY, libDepData, moduleNode))
-        }
-      case _ => // TODO: implement
-    }
 
     moduleNode.addChild(paths.toDataNode(moduleNode))
 

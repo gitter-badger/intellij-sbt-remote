@@ -19,6 +19,9 @@ trait Project {
   def addLibrary(id: LibraryId): Library
   def findLibrary(id: LibraryId): Option[Library]
   def removeLibrary(id: LibraryId): Unit
+
+  def addDependency(moduleId: String, dependency: Dependency): Unit
+  def removeDependency(moduleId: String, dependency: Dependency): Unit
 }
 
 trait Module {
@@ -28,9 +31,6 @@ trait Module {
 
   def addPath(path: Path): Unit
   def removePath(path: Path): Unit
-
-  def addDependency(dependency: Dependency): Unit
-  def removeDependency(dependency: Dependency): Unit
 }
 
 trait Library {
