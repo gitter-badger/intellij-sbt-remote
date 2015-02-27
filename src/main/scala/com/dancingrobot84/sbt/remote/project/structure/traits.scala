@@ -12,25 +12,36 @@ trait Project {
   val base: URI
   var name: String
 
-  def addModule(name: String, base: File): Module
-  def findModule(name: String): Option[Module]
-  def removeModule(name: String): Unit
+  def addModule(id: String, base: File): Module
+  def findModule(id: String): Option[Module]
+  def removeModule(id: String): Unit
+
+  def addLibrary(id: LibraryId): Library
+  def findLibrary(id: LibraryId): Option[Library]
+  def removeLibrary(id: LibraryId): Unit
 }
 
 trait Module {
   val base: File
+  var id: String
   var name: String
 
   def addPath(path: Path): Unit
   def removePath(path: Path): Unit
+
+  def addDependency(dependency: Dependency): Unit
+  def removeDependency(dependency: Dependency): Unit
 }
 
 trait Library {
   val id: LibraryId
-  val artifacts: Seq[Artifact]
+
+  def addArtifact(artifact: Artifact): Unit
 }
 
-case class LibraryId(organization: String, name: String, version: String)
+case class LibraryId(organization: String, name: String, version: String) {
+  override def toString = s"$name" // TODO: fix
+}
 
 sealed trait Path {
   val base: File
@@ -52,8 +63,8 @@ object Path {
 
 sealed trait Dependency
 object Dependency {
-  case class Library(id: LibraryId, configuration: Configuration)
-  case class Module(base: File, configuration: Configuration)
+  case class Library(id: LibraryId, configuration: Configuration) extends Dependency
+  case class Module(base: File, configuration: Configuration) extends Dependency
 }
 
 sealed trait Configuration
