@@ -2,7 +2,7 @@ package com.dancingrobot84.sbt.remote.project.extractors
 
 import java.io.File
 
-import com.dancingrobot84.sbt.remote.project.structure.{Artifact, Configuration, Dependency, LibraryId}
+import com.dancingrobot84.sbt.remote.project.structure._
 import sbt.client.{RawValueListener, TaskKey}
 import sbt.protocol.{BuildValue, ScopedKey, TaskResult, TaskSuccess}
 
@@ -21,6 +21,7 @@ class DependenciesExtractor extends Extractor.Adapter {
     for {
       _ <- rawWatch("externalDependencyClasspath")(libraryWatcher(Configuration.Compile))
       _ <- rawWatch("test:externalDependencyClasspath")(libraryWatcher(Configuration.Test))
+      _ <- rawWatch("internalDependencyClasspath")(projectWatcher(Configuration.Compile))
     } yield Unit
   }
 
@@ -43,19 +44,31 @@ class DependenciesExtractor extends Extractor.Adapter {
   private def libraryWatcher(conf: Configuration)(key: ScopedKey, result: TaskResult): Unit = result match {
     case TaskSuccess(BuildValue(_, str)) =>
       for {
-        deps <- parse(str)
-        proj <- key.scope.project
-        mod  <- ctx.project.findModule(proj.name)
+        artifacts <- parse(str)
+        project <- key.scope.project
       } {
         val libId = conf match {
-          case Configuration.Compile => LibraryId("", s"${proj.name}-compile", "")
-          case Configuration.Test => LibraryId("", s"${proj.name}-test", "")
-          case _ => LibraryId("", s"${proj.name}", "")
+          case Configuration.Compile => LibraryId("", s"${project.name}-compile", "")
+          case Configuration.Test => LibraryId("", s"${project.name}-test", "")
+          case _ => LibraryId("", s"${project.name}", "")
         }
         val lib = ctx.project.addLibrary(libId)
-        deps.foreach(d => lib.addArtifact(Artifact.Binary(d)))
-        mod.addDependency(Dependency.Library(lib.id, conf))
-        ctx.logger.warn(s"Module: ${proj.name}; Conf: $conf; Artifacts: $deps")
+        artifacts.foreach(d => lib.addArtifact(Artifact.Binary(d)))
+        ctx.project.addDependency(project.name, Dependency.Library(lib.id, conf))
+        ctx.logger.warn(s"Module: ${project.name}; Conf: $conf; Artifacts: $artifacts")
+      }
+    case _ =>
+  }
+
+  private def projectWatcher(conf: Configuration)(key: ScopedKey, result: TaskResult): Unit = result match {
+    case TaskSuccess(BuildValue(_, str)) =>
+      for {
+        paths0  <- parse(str)
+        paths = paths0.map(p => if (p.getName == "classes") p else new File(p.getParent, "classes"))
+        project <- key.scope.project
+      } {
+        paths.foreach(path => ctx.project.addDependency(project.name, Dependency.Module(path, conf)))
+        ctx.logger.warn(s"Module: ${project.name}; Conf: $conf; Paths: $paths")
       }
     case _ =>
   }
