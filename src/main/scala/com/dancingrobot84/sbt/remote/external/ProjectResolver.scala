@@ -9,7 +9,7 @@ import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.model.task.{ExternalSystemTaskId, ExternalSystemTaskNotificationEvent, ExternalSystemTaskNotificationListener}
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
-
+import sbt.protocol.LogEvent
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Promise}
@@ -41,8 +41,14 @@ class ProjectResolver
     connector.open({ client =>
       logger.info("Retrieving structure")
 
+      client.handleEvents {
+        case logE : LogEvent =>
+          logger.info(logE.entry.message)
+        case _ =>
+      }
+
       val project = new StatefulProject(projectFile.toURI, projectFile.getName)
-      val (initFuture, _) = new SourceDirsExtractor().attach(Extractor.Context(client, project, logger))
+      val (initFuture, _) = new SourceDirsExtractor().attach(Extractor.Context(client, project, Log))
 
       initFuture.onComplete {
         case Success(_)   => projectPromise.success(project.toDataNode)
