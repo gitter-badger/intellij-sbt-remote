@@ -38,37 +38,43 @@ object Extractor {
     protected def addSubscription(s: Subscription) =
       subscriptions += s
 
-    protected def watchSettingKey[T](key: String)(valueListener: ValueListener[T])
-        (implicit unpickler: Unpickler[T], ex: ExecutionContext): Future[Seq[WatchResult[T]]] = {
-      Await.result(ctx.client.lookupScopedKey(key).map { allKeys =>
-        Future.sequence(allKeys
+    protected def watchSettingKey[T]
+        (key: String)(valueListener: ValueListener[T])
+        (implicit unpickler: Unpickler[T], ex: ExecutionContext) :
+        Future[Seq[WatchResult[T]]] =
+      ctx.client.lookupScopedKey(key).flatMap { allKeys =>
+        Future.sequence(
+          allKeys
           .filter(_.scope.project.exists(projects.contains))
           .map { key =>
             val p = Promise[WatchResult[T]]()
             addSubscription(ctx.client.watch(SettingKey[T](key)){ (key, result) =>
-              if (p.isCompleted) valueListener(key, result) else p.success((key, result))
+              valueListener(key, result)
+              p.trySuccess((key, result))
             })
             p.future
           }
         )
-      }, Duration.Inf)
-    }
+      }
 
-    protected def watchTaskKey[T](key: String)(valueListener: ValueListener[T])
-      (implicit unpickler: Unpickler[T], ex: ExecutionContext): Future[Seq[WatchResult[T]]] = {
-      Await.result(ctx.client.lookupScopedKey(key).map { allKeys =>
-        Future.sequence(allKeys
+    protected def watchTaskKey[T]
+        (key: String)(valueListener: ValueListener[T])
+        (implicit unpickler: Unpickler[T], ex: ExecutionContext) :
+        Future[Seq[WatchResult[T]]] =
+      ctx.client.lookupScopedKey(key).flatMap { allKeys =>
+        Future.sequence(
+          allKeys
           .filter(_.scope.project.exists(projects.contains))
           .map { key =>
-          val p = Promise[WatchResult[T]]()
-          addSubscription(ctx.client.watch(SettingKey[T](key)){ (key, result) =>
-            if (p.isCompleted) valueListener(key, result) else p.success((key, result))
-          })
-          p.future
-        }
+            val p = Promise[WatchResult[T]]()
+            addSubscription(ctx.client.watch(SettingKey[T](key)){ (key, result) =>
+              valueListener(key, result)
+              p.trySuccess((key, result))
+            })
+            p.future
+          }
         )
-      }, Duration.Inf)
-    }
+      }
 
     def attach(context: Context): (Future[Unit], Subscription) = {
       ctx = context
@@ -83,12 +89,11 @@ object Extractor {
           }.map(_.id)
 
           if(projects.isEmpty)
-            ctx.logger.error("No suitable modules found")
+            initPromise.failure(new Error("No suitable modules found"))
           else
-            doAttach().onComplete(initPromise.complete)
-
+            doAttach().onComplete(initPromise.tryComplete)
         }.getOrElse {
-          ctx.logger.error("No project found")
+          initPromise.failure(new Error("No project found"))
         }
       })
 
