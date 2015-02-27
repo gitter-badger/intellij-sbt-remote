@@ -9,7 +9,7 @@ import sbt.protocol.ScopedKey
 import sbt.serialization._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -32,7 +32,7 @@ class SourceDirsExtractor extends Extractor.Adapter {
       _ <- watchSettingKey[Seq[File]]("test:managedResourceDirectories")(pathsWatcher(Path.GenTestResource))
       _ <- watchSettingKey[File]("classDirectory")(pathWatcher(Path.Output))
       last <- watchSettingKey[File]("test:classDirectory")(pathWatcher(Path.TestOutput))
-    } yield last
+    } yield Unit
 
   private def baseDirWatcher(key: ScopedKey, result: Try[File]): Unit = result match {
     case Success(baseDir) => key.scope.project.foreach { p =>
