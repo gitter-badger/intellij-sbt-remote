@@ -36,12 +36,15 @@ class DependenciesExtractor extends Extractor.Adapter {
       (key: ScopedKey, result: Try[BuildDependencies])
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(buildDependencies) =>
-      buildDependencies.classpath.foreach { case (projectRef, classpathDeps) =>
-        classpathDeps.foreach { dep =>
-          val conf = Configuration.Compile // TODO: check configuration
-          ctx.project.addDependency(projectRef.name, Dependency.Module(dep.project.name, conf))
-          ctx.logger.warn(s"Module '${projectRef.name}'; depends on '${dep.project.name}'")
-        }
+      for {
+        (projectRef, classpathDeps) <- buildDependencies.classpath
+        dependency <- classpathDeps
+        configuration = dependency.configuration
+                                  .flatMap(Configuration.fromString)
+                                  .getOrElse(Configuration.Compile)
+      } {
+        ctx.project.addDependency(projectRef.name, Dependency.Module(dependency.project.name, configuration))
+        ctx.logger.warn(s"Module '${projectRef.name}'; depends on '${dependency.project.name}'")
       }
     case Failure(exc) =>
       ctx.logger.error(s"Failed retrieving 'buildDependencies' key", exc)
