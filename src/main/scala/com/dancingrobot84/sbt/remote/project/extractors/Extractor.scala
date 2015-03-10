@@ -5,7 +5,7 @@ package extractors
 import com.dancingrobot84.sbt.remote.project.structure.Project
 import sbt.client._
 import sbt.protocol.{MinimalBuildStructure, ProjectReference, ScopedKey}
-import sbt.serialization.Unpickler
+import sbt.serialization._
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -17,34 +17,31 @@ import scala.util.Try
  * @since: 2/18/15.
  */
 trait Extractor {
-  def attach(context: Extractor.Context): (Future[Unit], Subscription)
+  def attach(client: SbtClient, project: Project, logger: Logger): (Future[Unit], Subscription)
 }
 
 object Extractor {
-  final case class Context(client: SbtClient, project: Project, logger: Logger)
+
+  final case class Context(client: SbtClient, project: Project, logger: Logger, acceptedProjects: Vector[ProjectReference])
 
   type WatchResult[T] = (ScopedKey, Try[T])
 
   abstract class Adapter extends Extractor {
-    @volatile
-    protected var projects: Vector[ProjectReference] = Vector.empty
     protected val subscriptions = mutable.Buffer.empty[Subscription]
-    protected var ctx: Context = null
 
-
-    protected def doAttach(): Future[Unit]
+    protected def doAttach(implicit ctx: Context): Future[Unit]
 
     protected def addSubscription(s: Subscription) =
       subscriptions += s
 
     protected def watchSettingKey[T]
         (key: String)(valueListener: ValueListener[T])
-        (implicit unpickler: Unpickler[T], ex: ExecutionContext) :
+        (implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Context) :
         Future[Seq[WatchResult[T]]] =
       ctx.client.lookupScopedKey(key).flatMap { allKeys =>
         Future.sequence(
           allKeys
-          .filter(_.scope.project.exists(projects.contains))
+          .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
           .map { key =>
             val p = Promise[WatchResult[T]]()
             addSubscription(ctx.client.watch(SettingKey[T](key)){ (key, result) =>
@@ -58,12 +55,12 @@ object Extractor {
 
     protected def watchTaskKey[T]
         (key: String)(valueListener: ValueListener[T])
-        (implicit unpickler: Unpickler[T], ex: ExecutionContext) :
+        (implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Context) :
         Future[Seq[WatchResult[T]]] =
       ctx.client.lookupScopedKey(key).flatMap { allKeys =>
         Future.sequence(
           allKeys
-          .filter(_.scope.project.exists(projects.contains))
+          .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
           .map { key =>
             val p = Promise[WatchResult[T]]()
             addSubscription(ctx.client.watch(SettingKey[T](key)){ (key, result) =>
@@ -75,22 +72,29 @@ object Extractor {
         )
       }
 
-    def attach(context: Context): (Future[Unit], Subscription) = {
-      ctx = context
+    protected def ifProjectAccepted
+        (project: Option[ProjectReference])(onAccept: ProjectReference => Unit)
+        (implicit ctx: Context): Unit =
+      project.foreach { p =>
+        if (p.build == ctx.project.base && ctx.acceptedProjects.contains(p))
+          onAccept(p)
+      }
+
+    def attach(client: SbtClient, project: Project, logger: Logger): (Future[Unit], Subscription) = {
       val initPromise = Promise[Unit]()
 
-      addSubscription(ctx.client.watchBuild { case MinimalBuildStructure(builds, allProjects) =>
-        val buildOpt = builds.find(_ == ctx.project.base).headOption
+      addSubscription(client.watchBuild { case MinimalBuildStructure(builds, allProjects) =>
+        val buildOpt = builds.find(_ == project.base).headOption
 
         buildOpt.map { build =>
-          projects = allProjects.filter { p =>
+          val acceptedProjects = allProjects.filter { p =>
             p.id.build == build && p.plugins.contains("sbt.plugins.JvmPlugin")
           }.map(_.id)
 
-          if(projects.isEmpty)
+          if(acceptedProjects.isEmpty)
             initPromise.failure(new Error("No suitable modules found"))
           else
-            doAttach().onComplete(initPromise.tryComplete)
+            doAttach(Context(client, project, logger, acceptedProjects)).onComplete(initPromise.tryComplete)
         }.getOrElse {
           initPromise.failure(new Error("No project found"))
         }
