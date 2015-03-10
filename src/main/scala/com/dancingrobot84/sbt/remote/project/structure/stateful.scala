@@ -65,6 +65,8 @@ class StatefulProject(val base: URI, @volatile var name: String) extends Project
   }
 
   def toDataNode: DataNode[ProjectData] = {
+    import Helpers._
+
     val baseFile = new File(base)
     val projectNode = new DataNode(
       ProjectKeys.PROJECT,
@@ -74,41 +76,12 @@ class StatefulProject(val base: URI, @volatile var name: String) extends Project
     val libraryNodes = libraries.map(_.toDataNode(projectNode))
     val moduleNodes = modules.map(_.toDataNode(projectNode))
 
-    dependencies.foreach { case (module, dependency) =>
-      dependency match {
-        case Dependency.Library(libId, conf) =>
-          for {
-            moduleNode <- moduleNodes
-            if moduleNode.getData.getId == module.id
-            libraryNode <- libraryNodes
-            if libraryNode.getData.getExternalName == libId.toString
-          } {
-            val libDepData = new LibraryDependencyData(moduleNode.getData, libraryNode.getData, LibraryLevel.PROJECT)
-            conf match {
-              case Configuration.Compile => libDepData.setScope(DependencyScope.COMPILE)
-              case Configuration.Test => libDepData.setScope(DependencyScope.TEST)
-              case _ => // TODO: implement
-            }
-            moduleNode.addChild(new DataNode(ProjectKeys.LIBRARY_DEPENDENCY, libDepData, moduleNode))
-          }
-        case Dependency.Module(depBase, conf) =>
-          for {
-            dependentNode <- moduleNodes
-            if dependentNode.getData.getId == module.id
-            masterModule <- modules.filter(_.hasPath(Path.Output(depBase)))
-            masterNode   <- moduleNodes
-            if masterNode.getData.getId == masterModule.id
-          } {
-            val moduleDepData = new ModuleDependencyData(dependentNode.getData, masterNode.getData)
-            conf match {
-              case Configuration.Compile => moduleDepData.setScope(DependencyScope.COMPILE)
-              case Configuration.Test => moduleDepData.setScope(DependencyScope.TEST)
-              case _ => // TODO: implement
-            }
-            dependentNode.addChild(new DataNode(ProjectKeys.MODULE_DEPENDENCY, moduleDepData, dependentNode))
-          }
-        }
-      }
+    for {
+      (module, dependency) <- dependencies
+      moduleNode <- moduleNodes
+      if moduleNode.getData.getId == module.id
+      depNode <- dependency.toDataNode(moduleNode, libraryNodes, moduleNodes)
+    } moduleNode.addChild(depNode)
 
     libraryNodes.foreach(projectNode.addChild)
     moduleNodes.foreach(projectNode.addChild)
@@ -133,7 +106,7 @@ class StatefulModule(val base: File, @volatile var id: String, @volatile var nam
   }
 
   def toDataNode(parent: DataNode[ProjectData]): DataNode[ModuleData] = {
-    import com.dancingrobot84.sbt.remote.project.structure.Helpers._
+    import Helpers._
 
     val ideModulePath = parent.getData(ProjectKeys.PROJECT)
                               .getIdeProjectFileDirectoryPath + "/.idea/modules"
@@ -194,6 +167,44 @@ object Helpers {
           module.setCompileOutputPath(ExternalSystemSourceType.TEST, base.getAbsolutePath)
       }
       new DataNode(ProjectKeys.CONTENT_ROOT, data, parent)
+    }
+  }
+
+  implicit class RichDependency(dependency: Dependency) {
+    def toDataNode(parent: DataNode[ModuleData],
+                   libraryNodes: Seq[DataNode[LibraryData]],
+                   moduleNodes: Seq[DataNode[ModuleData]]): Option[DataNode[_ <: AbstractDependencyData[_]]] = {
+
+      def addLibraryDependency
+          (libraryId: LibraryId, configuration: Configuration):
+          Option[DataNode[_ <: AbstractDependencyData[_]]] =
+        libraryNodes.find(_.getData.getExternalName == libraryId.toString).map { libraryNode =>
+          val libDepData = new LibraryDependencyData(parent.getData, libraryNode.getData, LibraryLevel.PROJECT)
+          setScopeByConf(libDepData, configuration)
+          new DataNode(ProjectKeys.LIBRARY_DEPENDENCY, libDepData, parent)
+        }
+
+      def addModuleDependency
+          (dependencyId: String, configuration: Configuration):
+          Option[DataNode[_ <: AbstractDependencyData[_]]] =
+        moduleNodes.find(_.getData.getId == dependencyId).map { masterNode =>
+          val moduleDepData = new ModuleDependencyData(parent.getData, masterNode.getData)
+          setScopeByConf(moduleDepData, configuration)
+          new DataNode(ProjectKeys.MODULE_DEPENDENCY, moduleDepData, parent)
+        }
+
+      def setScopeByConf(dependencyData: AbstractDependencyData[_], configuration: Configuration): Unit =
+        configuration match {
+          case Configuration.Compile  => dependencyData.setScope(DependencyScope.COMPILE)
+          case Configuration.Test     => dependencyData.setScope(DependencyScope.TEST)
+          case Configuration.Runtime  => dependencyData.setScope(DependencyScope.RUNTIME)
+          case Configuration.Provided => dependencyData.setScope(DependencyScope.PROVIDED)
+        }
+
+      dependency match {
+        case Dependency.Library(libId, conf) => addLibraryDependency(libId, conf)
+        case Dependency.Module(depId, conf)  => addModuleDependency(depId, conf)
+      }
     }
   }
 }

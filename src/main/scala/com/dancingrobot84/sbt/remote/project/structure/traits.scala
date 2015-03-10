@@ -40,7 +40,7 @@ trait Library {
 }
 
 case class LibraryId(organization: String, name: String, version: String) {
-  override def toString = s"$name" // TODO: fix
+  override def toString = s"$name" // TODO: output fully qualified name
 }
 
 sealed trait Path {
@@ -64,7 +64,7 @@ object Path {
 sealed trait Dependency
 object Dependency {
   case class Library(id: LibraryId, configuration: Configuration) extends Dependency
-  case class Module(base: File, configuration: Configuration) extends Dependency
+  case class Module(id: String, configuration: Configuration) extends Dependency
 }
 
 sealed trait Configuration
