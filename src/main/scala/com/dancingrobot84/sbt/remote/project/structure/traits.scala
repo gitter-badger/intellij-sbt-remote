@@ -73,6 +73,14 @@ object Configuration {
   object Compile  extends Configuration
   object Runtime  extends Configuration
   object Provided extends Configuration
+
+  def fromString(confStr: String): Option[Configuration] = confStr match {
+    case "test"     => Some(Configuration.Test)
+    case "compile"  => Some(Configuration.Compile)
+    case "runtime"  => Some(Configuration.Runtime)
+    case "provided" => Some(Configuration.Provided)
+    case _          => None
+  }
 }
 
 sealed trait Artifact
