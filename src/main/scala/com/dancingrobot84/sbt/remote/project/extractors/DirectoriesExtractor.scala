@@ -37,28 +37,32 @@ class DirectoriesExtractor extends Extractor.Adapter {
       (key: ScopedKey, result: Try[File])
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(baseDir) => ifProjectAccepted(key.scope.project) { p =>
-      ctx.project.addModule(p.name, baseDir)
-      if (baseDir == new File(ctx.project.base))
-        ctx.project.name = p.name
-      ctx.logger.warn(s"Module '${p.name}' sets '$baseDir' as baseDirectory")
+      withProject { project =>
+        project.addModule(p.name, baseDir)
+        if (baseDir == new File(project.base))
+          project.name = p.name
+      }
+      logger.warn(s"Module '${p.name}' sets '$baseDir' as baseDirectory")
     }
     case Failure(exc) =>
-      ctx.logger.error("Failed retrieving 'baseDirectory' key", exc)
+      logger.error("Failed retrieving 'baseDirectory' key", exc)
   }
 
   private def nameWatcher
       (key: ScopedKey, result: Try[String])
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(name) => ifProjectAccepted(key.scope.project) { p =>
-      ctx.project.findModule(p.name).foreach { module =>
-        module.name = name
-        if (ctx.project.base == module.base.toURI)
-          ctx.project.name = name
-        ctx.logger.warn(s"Module '${p.name}' changes its name to '$name'")
+      withProject { project =>
+        project.findModule(p.name).foreach { module =>
+          module.name = name
+          if (project.base == module.base.toURI)
+            project.name = name
+        }
       }
+      logger.warn(s"Module '${p.name}' changes its name to '$name'")
     }
     case Failure(exc) =>
-      ctx.logger.error("Failed retrieving 'name' key", exc)
+      logger.error("Failed retrieving 'name' key", exc)
   }
 
   private def pathsWatcher
@@ -66,23 +70,27 @@ class DirectoriesExtractor extends Extractor.Adapter {
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(paths) => ifProjectAccepted(key.scope.project) { p =>
       paths.foreach { path =>
-        ctx.logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
-        ctx.project.findModule(p.name).foreach(_.addPath(pathTrans(path)))
+        withProject { project =>
+          project.findModule(p.name).foreach(_.addPath(pathTrans(path)))
+        }
+        logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
       }
     }
     case Failure(exc) =>
-      ctx.logger.error(s"Failed retrieving '$key' key", exc)
+      logger.error(s"Failed retrieving '$key' key", exc)
   }
 
   private def pathWatcher
       (pathTrans: File => Path)(key: ScopedKey, result: Try[File])
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(path) => ifProjectAccepted(key.scope.project) { p =>
-      ctx.logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
-      ctx.project.findModule(p.name).foreach(_.addPath(pathTrans(path)))
+      logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
+      withProject { project =>
+        project.findModule(p.name).foreach(_.addPath(pathTrans(path)))
+      }
     }
     case Failure(exc) =>
-      ctx.logger.error(s"Failed retrieving '$key' key", exc)
+      logger.error(s"Failed retrieving '$key' key", exc)
   }
 
 }

@@ -8,6 +8,10 @@ import java.net.URI
  * @since: 2/12/15.
  */
 
+trait ProjectRef {
+  var project: Project
+}
+
 trait Project {
   val base: URI
   var name: String
@@ -22,6 +26,8 @@ trait Project {
 
   def addDependency(moduleId: String, dependency: Dependency): Unit
   def removeDependency(moduleId: String, dependency: Dependency): Unit
+
+  def copy: Project
 }
 
 trait Module {

@@ -4,7 +4,7 @@ package external
 import java.io.File
 
 import com.dancingrobot84.sbt.remote.project.extractors._
-import com.dancingrobot84.sbt.remote.project.structure.StatefulProject
+import com.dancingrobot84.sbt.remote.project.structure.{Project, ProjectRef, StatefulProject}
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.model.task.{ExternalSystemTaskId, ExternalSystemTaskNotificationEvent, ExternalSystemTaskNotificationListener}
@@ -49,12 +49,15 @@ class ProjectResolver
         case _ =>
       }
 
-      val project = new StatefulProject(projectFile.toURI, projectFile.getName)
+      var projectRef = new ProjectRef {
+        var project: Project = new StatefulProject(projectFile.toURI, projectFile.getName)
+      }
+
       for {
-        _ <- new DirectoriesExtractor().attach(client, project, Log)._1
-        _ <- new InternalDependenciesExtractor().attach(client, project, Log)._1
+        _ <- new DirectoriesExtractor().attach(client, projectRef, Log)._1
+        _ <- new InternalDependenciesExtractor().attach(client, projectRef, Log)._1
       } {
-        projectPromise.success(project.toDataNode)
+        projectPromise.success(projectRef.project.asInstanceOf[StatefulProject].toDataNode)
       }
     }
 

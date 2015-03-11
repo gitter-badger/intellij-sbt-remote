@@ -28,15 +28,17 @@ class InternalDependenciesExtractor extends Extractor.Adapter {
       (key: ScopedKey, result: Try[Seq[Attributed[File]]])
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(jars) => ifProjectAccepted(key.scope.project) { p =>
-      val lib = ctx.project.addLibrary(LibraryId.unmanagedJarsLibraryId(p.name, conf))
-      jars.foreach { f =>
-        ctx.logger.warn(s"Library '${lib.id}' adds '${f.data}' to itself")
-        lib.addArtifact(Artifact.Binary(f.data))
+      withProject { project =>
+        val lib = project.addLibrary(LibraryId.unmanagedJarsLibraryId(p.name, conf))
+        jars.foreach { f =>
+          logger.warn(s"Library '${lib.id}' adds '${f.data}' to itself")
+          lib.addArtifact(Artifact.Binary(f.data))
+        }
+        project.addDependency(p.name, Dependency.Library(lib.id, conf))
       }
-      ctx.project.addDependency(p.name, Dependency.Library(lib.id, conf))
     }
     case Failure(exc) =>
-      ctx.logger.error(s"Failed retrieving '$key' key", exc)
+      logger.error(s"Failed retrieving '$key' key", exc)
   }
 
   private def buildDependenciesWatcher
@@ -50,11 +52,13 @@ class InternalDependenciesExtractor extends Extractor.Adapter {
                                   .flatMap(Configuration.fromString)
                                   .getOrElse(Configuration.Compile)
       } {
-        ctx.project.addDependency(projectRef.name, Dependency.Module(dependency.project.name, configuration))
-        ctx.logger.warn(s"Module '${projectRef.name}' depends on '${dependency.project.name}'")
+        withProject { project =>
+          project.addDependency(projectRef.name, Dependency.Module(dependency.project.name, configuration))
+        }
+        logger.warn(s"Module '${projectRef.name}' depends on '${dependency.project.name}'")
       }
     case Failure(exc) =>
-      ctx.logger.error(s"Failed retrieving 'buildDependencies' key", exc)
+      logger.error(s"Failed retrieving 'buildDependencies' key", exc)
   }
 
 }

@@ -2,7 +2,7 @@ package com.dancingrobot84.sbt.remote
 package project
 package extractors
 
-import com.dancingrobot84.sbt.remote.project.structure.Project
+import com.dancingrobot84.sbt.remote.project.structure.{ProjectRef, Project}
 import sbt.client._
 import sbt.protocol.{MinimalBuildStructure, ProjectReference, ScopedKey}
 import sbt.serialization._
@@ -17,12 +17,31 @@ import scala.util.Try
  * @since: 2/18/15.
  */
 trait Extractor {
-  def attach(client: SbtClient, project: Project, logger: Logger): (Future[Unit], Subscription)
+  def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription)
 }
 
 object Extractor {
 
-  final case class Context(client: SbtClient, project: Project, logger: Logger, acceptedProjects: Vector[ProjectReference])
+  trait Context {
+    val client: SbtClient
+    val logger: Logger
+    val acceptedProjects: Vector[ProjectReference]
+    def withProject[T](trans: Project => T): T
+  }
+
+  private final class SynchronizedContext
+      (val client: SbtClient,
+       val logger: Logger,
+       val acceptedProjects: Vector[ProjectReference],
+       val projectRef: ProjectRef)
+    extends Context {
+
+    def withProject[T](trans: Project => T): T = this.synchronized {
+      val result = trans(projectRef.project)
+      projectRef.project = projectRef.project.copy
+      result
+    }
+  }
 
   type WatchResult[T] = (ScopedKey, Try[T])
 
@@ -76,15 +95,22 @@ object Extractor {
         (project: Option[ProjectReference])(onAccept: ProjectReference => Unit)
         (implicit ctx: Context): Unit =
       project.foreach { p =>
-        if (p.build == ctx.project.base && ctx.acceptedProjects.contains(p))
+        val base = withProject(_.base)
+        if (p.build == base && ctx.acceptedProjects.contains(p))
           onAccept(p)
       }
 
-    def attach(client: SbtClient, project: Project, logger: Logger): (Future[Unit], Subscription) = {
+    protected def withProject[T](trans: Project => T)(implicit ctx: Context): T =
+      ctx.withProject(trans)
+
+    protected def logger(implicit ctx: Context): Logger =
+      ctx.logger
+
+    def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription) = {
       val initPromise = Promise[Unit]()
 
       addSubscription(client.watchBuild { case MinimalBuildStructure(builds, allProjects) =>
-        val buildOpt = builds.find(_ == project.base).headOption
+        val buildOpt = builds.find(_ == projectRef.project.base).headOption
 
         buildOpt.map { build =>
           val acceptedProjects = allProjects.filter { p =>
@@ -94,7 +120,7 @@ object Extractor {
           if(acceptedProjects.isEmpty)
             initPromise.failure(new Error("No suitable modules found"))
           else
-            doAttach(Context(client, project, logger, acceptedProjects)).onComplete(initPromise.tryComplete)
+            doAttach(new SynchronizedContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
         }.getOrElse {
           initPromise.failure(new Error("No project found"))
         }

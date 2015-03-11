@@ -11,58 +11,53 @@ import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.roots.DependencyScope
 import scala.collection.mutable
 
+
 /**
  * @author: Nikolay Obedin
  * @since: 2/20/15.
  */
-class StatefulProject(val base: URI, @volatile var name: String) extends Project {
+class StatefulProject(val base: URI, var name: String) extends Project with Cloneable {
   private val modules   = mutable.Buffer.empty[StatefulModule]
   private val libraries = mutable.Buffer.empty[StatefulLibrary]
   private val dependencies = mutable.Set.empty[(StatefulModule, Dependency)]
 
-  def addModule(id: String, base: File) = this.synchronized {
+  def addModule(id: String, base: File) =
     findModule(id).getOrElse {
       val module = new StatefulModule(base, id, id)
       modules += module
       module
     }
-  }
 
-  def findModule(id: String) = this.synchronized {
+  def findModule(id: String) =
     modules.find(_.id == id)
-  }
 
-  def removeModule(id: String) = this.synchronized {
+  def removeModule(id: String) =
     findModule(id).foreach(modules -= _)
-  }
 
-  def addLibrary(id: LibraryId): Library = this.synchronized {
+  def addLibrary(id: LibraryId): Library =
     findLibrary(id).getOrElse {
       val lib = new StatefulLibrary(id)
       libraries += lib
       lib
     }
-  }
 
-  def findLibrary(id: LibraryId) = this.synchronized {
+  def findLibrary(id: LibraryId) =
     libraries.find(_.id == id)
-  }
 
-  def removeLibrary(id: LibraryId): Unit = this.synchronized {
+  def removeLibrary(id: LibraryId): Unit =
     findLibrary(id).foreach(libraries -= _)
-  }
 
-  def addDependency(moduleId: String, dependency: Dependency) = this.synchronized {
+  def addDependency(moduleId: String, dependency: Dependency) =
     findModule(moduleId).foreach { m =>
       dependencies += Tuple2(m, dependency)
     }
-  }
 
-  def removeDependency(moduleId: String, dependency: Dependency) = this.synchronized {
+  def removeDependency(moduleId: String, dependency: Dependency) =
     findModule(moduleId).foreach { m =>
       dependencies -= Tuple2(m, dependency)
     }
-  }
+
+  def copy: Project = this.clone.asInstanceOf[Project]
 
   def toDataNode: DataNode[ProjectData] = {
     import Helpers._
@@ -90,20 +85,17 @@ class StatefulProject(val base: URI, @volatile var name: String) extends Project
   }
 }
 
-class StatefulModule(val base: File, @volatile var id: String, @volatile var name: String) extends Module {
+class StatefulModule(val base: File, var id: String, var name: String) extends Module {
   private val paths = mutable.Set.empty[Path]
 
-  def addPath(path: Path) = this.synchronized {
+  def addPath(path: Path) =
     paths += path
-  }
 
-  def hasPath(path: Path) = this.synchronized {
+  def hasPath(path: Path) =
     paths.contains(path)
-  }
 
-  def removePath(path: Path) = this.synchronized {
+  def removePath(path: Path) =
     paths -= path
-  }
 
   def toDataNode(parent: DataNode[ProjectData]): DataNode[ModuleData] = {
     import Helpers._
@@ -125,9 +117,8 @@ class StatefulModule(val base: File, @volatile var id: String, @volatile var nam
 class StatefulLibrary(val id: LibraryId) extends Library {
   private val artifacts = mutable.Set.empty[Artifact]
 
-  def addArtifact(artifact: Artifact) = this.synchronized {
+  def addArtifact(artifact: Artifact) =
     artifacts += artifact
-  }
 
   def toDataNode(parent: DataNode[ProjectData]): DataNode[LibraryData] = {
     val lib = new LibraryData(external.Id, id.toString, false)
