@@ -19,14 +19,24 @@ class InternalDependenciesExtractor extends Extractor.Adapter {
   def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
     for {
       _ <- watchSettingKey[BuildDependencies]("buildDependencies")(buildDependenciesWatcher)
-      _ <- watchTaskKey[Seq[Attributed[File]]]("internalDependencyClasspath")(classpathWatcher)
+      _ <- watchTaskKey[Seq[Attributed[File]]]("unmanagedJars")(classpathWatcher(Configuration.Compile))
+      _ <- watchTaskKey[Seq[Attributed[File]]]("test:unmanagedJars")(classpathWatcher(Configuration.Test))
     } yield Unit
   }
 
-  private def classpathWatcher
+  private def classpathWatcher(conf: Configuration)
       (key: ScopedKey, result: Try[Seq[Attributed[File]]])
-      (implicit ctx: Extractor.Context): Unit = {
-    println("TODO: internalDependencyClasspath")
+      (implicit ctx: Extractor.Context): Unit = result match {
+    case Success(jars) => ifProjectAccepted(key.scope.project) { p =>
+      val lib = ctx.project.addLibrary(LibraryId.unmanagedJarsLibraryId(p.name, conf))
+      jars.foreach { f =>
+        ctx.logger.warn(s"Library '${lib.id}' adds '${f.data}' to itself")
+        lib.addArtifact(Artifact.Binary(f.data))
+      }
+      ctx.project.addDependency(p.name, Dependency.Library(lib.id, conf))
+    }
+    case Failure(exc) =>
+      ctx.logger.error(s"Failed retrieving '$key' key", exc)
   }
 
   private def buildDependenciesWatcher
@@ -41,7 +51,7 @@ class InternalDependenciesExtractor extends Extractor.Adapter {
                                   .getOrElse(Configuration.Compile)
       } {
         ctx.project.addDependency(projectRef.name, Dependency.Module(dependency.project.name, configuration))
-        ctx.logger.warn(s"Module '${projectRef.name}'; depends on '${dependency.project.name}'")
+        ctx.logger.warn(s"Module '${projectRef.name}' depends on '${dependency.project.name}'")
       }
     case Failure(exc) =>
       ctx.logger.error(s"Failed retrieving 'buildDependencies' key", exc)
