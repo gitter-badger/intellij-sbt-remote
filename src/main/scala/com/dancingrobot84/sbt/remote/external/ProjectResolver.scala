@@ -5,7 +5,7 @@ import java.io.File
 
 import com.dancingrobot84.sbt.remote.project.extractors._
 import com.dancingrobot84.sbt.remote.project.structure.{Project, ProjectRef, StatefulProject}
-import com.intellij.openapi.externalSystem.model.DataNode
+import com.intellij.openapi.externalSystem.model.{ExternalSystemException, DataNode}
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.model.task.{ExternalSystemTaskId, ExternalSystemTaskNotificationEvent, ExternalSystemTaskNotificationListener}
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
@@ -50,14 +50,18 @@ class ProjectResolver
       }
 
       var projectRef = new ProjectRef {
-        var project: Project = new StatefulProject(projectFile.toURI, projectFile.getName)
+        var project: Project = new StatefulProject(projectFile.getCanonicalFile.toURI, projectFile.getName)
       }
 
-      for {
+      val extraction = for {
         _ <- new DirectoriesExtractor().attach(client, projectRef, Log)._1
         _ <- new InternalDependenciesExtractor().attach(client, projectRef, Log)._1
-      } {
-        projectPromise.success(projectRef.project.asInstanceOf[StatefulProject].toDataNode)
+        _ <- new ExternalDependenciesExtractor().attach(client, projectRef, Log)._1
+      } yield Unit
+
+      extraction.onComplete {
+        case Success(_)   => projectPromise.success(projectRef.project.asInstanceOf[StatefulProject].toDataNode)
+        case Failure(exc) => projectPromise.failure(new ExternalSystemException(exc))
       }
     }
 
@@ -67,7 +71,7 @@ class ProjectResolver
       if (reconnect)
         logger.warn(reason)
       else
-        projectPromise.failure(new Error(reason))
+        projectPromise.failure(new ExternalSystemException(reason))
     })
 
     Await.result(projectPromise.future, Duration.Inf)
