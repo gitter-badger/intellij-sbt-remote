@@ -15,7 +15,7 @@ import scala.util.{Failure, Success, Try}
  * @author: Nikolay Obedin
  * @since: 2/18/15.
  */
-class SourceDirsExtractor extends Extractor.Adapter {
+class DirectoriesExtractor extends Extractor.Adapter {
 
   def doAttach(implicit ctx: Extractor.Context): Future[Unit] =
     for {
@@ -30,7 +30,7 @@ class SourceDirsExtractor extends Extractor.Adapter {
       _ <- watchSettingKey[Seq[File]]("test:unmanagedResourceDirectories")(pathsWatcher(Path.TestResource))
       _ <- watchSettingKey[Seq[File]]("test:managedResourceDirectories")(pathsWatcher(Path.GenTestResource))
       _ <- watchSettingKey[File]("classDirectory")(pathWatcher(Path.Output))
-      last <- watchSettingKey[File]("test:classDirectory")(pathWatcher(Path.TestOutput))
+      _ <- watchSettingKey[File]("test:classDirectory")(pathWatcher(Path.TestOutput))
     } yield Unit
 
   private def baseDirWatcher

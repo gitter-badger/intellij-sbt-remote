@@ -50,15 +50,11 @@ class ProjectResolver
       }
 
       val project = new StatefulProject(projectFile.toURI, projectFile.getName)
-      val (initFuture, _) = new SourceDirsExtractor().attach(client, project, Log)
-
-      initFuture.onComplete {
-        case Success(_)   =>
-          new InternalDependenciesExtractor()
-            .attach(client, project, Log)
-            ._1.onComplete(_ => projectPromise.success(project.toDataNode))
-        case Failure(err) =>
-          projectPromise.failure(err)
+      for {
+        _ <- new DirectoriesExtractor().attach(client, project, Log)._1
+        _ <- new InternalDependenciesExtractor().attach(client, project, Log)._1
+      } {
+        projectPromise.success(project.toDataNode)
       }
     }
 
