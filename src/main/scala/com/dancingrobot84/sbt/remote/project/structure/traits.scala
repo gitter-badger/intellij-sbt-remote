@@ -40,7 +40,12 @@ trait Library {
 }
 
 case class LibraryId(organization: String, name: String, version: String) {
-  override def toString = s"$name" // TODO: output fully qualified name
+  override def toString = s"$organization:$name:$version"
+}
+
+object LibraryId {
+  def unmanagedJarsLibraryId(moduleId: String, configuration: Configuration) =
+    LibraryId("unmanagedJars", moduleId, configuration.toString.toLowerCase)
 }
 
 sealed trait Path {
