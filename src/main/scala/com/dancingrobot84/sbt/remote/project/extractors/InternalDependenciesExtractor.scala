@@ -3,33 +3,30 @@ package com.dancingrobot84.sbt.remote.project.extractors
 import java.io.File
 
 import com.dancingrobot84.sbt.remote.project.structure._
-import sbt.client.{RawValueListener, TaskKey}
 import sbt.protocol._
+import sbt.serialization._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Try, Success, Failure}
+import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 /**
  * @author: Nikolay Obedin
  * @since: 2/20/15.
  */
-class DependenciesExtractor extends Extractor.Adapter {
+class InternalDependenciesExtractor extends Extractor.Adapter {
 
   def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
     for {
       _ <- watchSettingKey[BuildDependencies]("buildDependencies")(buildDependenciesWatcher)
-      _ <- watchTaskKey[sbt.UpdateReport]("update")(updateWatcher)
+      _ <- watchTaskKey[Seq[Attributed[File]]]("internalDependencyClasspath")(classpathWatcher)
     } yield Unit
   }
 
-  private def updateWatcher
-      (key: ScopedKey, result: Try[sbt.UpdateReport])
-      (implicit ctx: Extractor.Context): Unit = result match {
-    case Success(updateReport) =>
-      println("TODO: update")
-    case Failure(exc) =>
-      ctx.logger.error(s"Failed retrieving 'update' key", exc)
+  private def classpathWatcher
+      (key: ScopedKey, result: Try[Seq[Attributed[File]]])
+      (implicit ctx: Extractor.Context): Unit = {
+    println("TODO: internalDependencyClasspath")
   }
 
   private def buildDependenciesWatcher

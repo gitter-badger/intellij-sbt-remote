@@ -54,7 +54,7 @@ class ProjectResolver
 
       initFuture.onComplete {
         case Success(_)   =>
-          new DependenciesExtractor()
+          new InternalDependenciesExtractor()
             .attach(client, project, Log)
             ._1.onComplete(_ => projectPromise.success(project.toDataNode))
         case Failure(err) =>

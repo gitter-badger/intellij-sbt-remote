@@ -11,10 +11,13 @@ val commonSettings = Seq(
 
 ideaPluginSettings ++ commonSettings
 
-//resolvers += Resolver.typesafeIvyRepo("releases")
+val versions = new {
+  val sbt = "0.13.8-RC1"
+  val sbtRemoteClient = "1.0-0c4f8149883708a2647e535b34c8d36806927791"
+}
 
 libraryDependencies ++= Seq(
-  "com.typesafe.sbtrc" % "client-2-10" % "1.0-6899f43d9872193adcf40b6c0d2838d4a968d5f3",
-  "org.scala-sbt" % "main" % "0.13.8-RC1",
-  "org.scala-sbt" % "ivy" % "0.13.8-RC1"
+  "com.typesafe.sbtrc" % "client-2-10" % versions.sbtRemoteClient,
+  "org.scala-sbt" % "main" % versions.sbt,
+  "org.scala-sbt" % "ivy" % versions.sbt
 )
