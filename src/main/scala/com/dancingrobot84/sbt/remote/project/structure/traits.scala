@@ -69,11 +69,12 @@ object Dependency {
 
 sealed trait Configuration
 object Configuration {
-  object Test     extends Configuration
-  object Compile  extends Configuration
-  object Runtime  extends Configuration
-  object Provided extends Configuration
+  case object Test     extends Configuration
+  case object Compile  extends Configuration
+  case object Runtime  extends Configuration
+  case object Provided extends Configuration
 
+  // TODO: this is very naive, need proper configuration parser
   def fromString(confStr: String): Option[Configuration] = confStr match {
     case "test"     => Some(Configuration.Test)
     case "compile"  => Some(Configuration.Compile)
