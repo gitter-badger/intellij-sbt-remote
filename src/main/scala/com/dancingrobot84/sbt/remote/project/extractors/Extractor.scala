@@ -36,7 +36,7 @@ object Extractor {
        val projectRef: ProjectRef)
     extends Context {
 
-    def withProject[T](trans: Project => T): T = this.synchronized {
+    def withProject[T](trans: Project => T): T = projectRef.synchronized {
       val result = trans(projectRef.project)
       projectRef.project = projectRef.project.copy
       result
