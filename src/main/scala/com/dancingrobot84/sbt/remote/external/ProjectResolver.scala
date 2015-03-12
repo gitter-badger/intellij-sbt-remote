@@ -49,7 +49,7 @@ class ProjectResolver
         case _ =>
       }
 
-      var projectRef = new ProjectRef {
+      val projectRef = new ProjectRef {
         var project: Project = new StatefulProject(projectFile.getCanonicalFile.toURI, projectFile.getName)
       }
 
@@ -59,8 +59,9 @@ class ProjectResolver
         _ <- new ExternalDependenciesExtractor().attach(client, projectRef, Log)._1
       } yield Unit
 
+      import DataNodeConversions._
       extraction.onComplete {
-        case Success(_)   => projectPromise.success(projectRef.project.asInstanceOf[StatefulProject].toDataNode)
+        case Success(_)   => projectPromise.success(projectRef.project.toDataNode)
         case Failure(exc) => projectPromise.failure(new ExternalSystemException(exc))
       }
     }

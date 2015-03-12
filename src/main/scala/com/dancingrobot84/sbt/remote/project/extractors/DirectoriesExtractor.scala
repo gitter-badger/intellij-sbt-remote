@@ -53,7 +53,7 @@ class DirectoriesExtractor extends Extractor.Adapter {
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(name) => ifProjectAccepted(key.scope.project) { p =>
       withProject { project =>
-        project.findModule(p.name).foreach { module =>
+        project.modules.find(_.id == p.name).foreach { module =>
           module.name = name
           if (project.base == module.base.toURI)
             project.name = name
@@ -71,7 +71,7 @@ class DirectoriesExtractor extends Extractor.Adapter {
     case Success(paths) => ifProjectAccepted(key.scope.project) { p =>
       paths.foreach { path =>
         withProject { project =>
-          project.findModule(p.name).foreach(_.addPath(pathTrans(path)))
+          project.modules.find(_.id == p.name).foreach(_.addPath(pathTrans(path)))
         }
         logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
       }
@@ -86,7 +86,7 @@ class DirectoriesExtractor extends Extractor.Adapter {
     case Success(path) => ifProjectAccepted(key.scope.project) { p =>
       logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
       withProject { project =>
-        project.findModule(p.name).foreach(_.addPath(pathTrans(path)))
+        project.modules.find(_.id == p.name).foreach(_.addPath(pathTrans(path)))
       }
     }
     case Failure(exc) =>

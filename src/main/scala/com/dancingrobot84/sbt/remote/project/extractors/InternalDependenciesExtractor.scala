@@ -29,13 +29,14 @@ class InternalDependenciesExtractor extends Extractor.Adapter {
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(jars) => ifProjectAccepted(key.scope.project) { p =>
       withProject { project =>
-        if (jars.nonEmpty) {
-          val lib = project.addLibrary(Library.Id.forUnmanagedJars(p.name, conf))
-          jars.foreach { f =>
-            logger.warn(s"Library '${lib.id}' adds '${f.data}' to itself")
-            lib.addArtifact(Artifact.Binary(f.data))
-          }
-          project.addDependency(p.name, Dependency.Library(lib.id, conf))
+        for {
+          module <- project.modules.find(_.id == p.name)
+          jar <- jars
+          lib = project.addLibrary(Library.Id.forUnmanagedJars(module.id, conf))
+        } {
+          logger.warn(s"Library '${lib.id}' adds '${jar.data}' to itself")
+          lib.addArtifact(Artifact.Binary(jar.data))
+          module.addDependency(Dependency.Library(lib.id, conf))
         }
       }
     }
@@ -54,9 +55,9 @@ class InternalDependenciesExtractor extends Extractor.Adapter {
                                   .flatMap(Configuration.fromString)
                                   .getOrElse(Configuration.Compile)
       } {
-        withProject { project =>
-          project.addDependency(projectRef.name, Dependency.Module(dependency.project.name, configuration))
-        }
+        withProject(_.modules.find(_.id == projectRef.name).foreach { module =>
+            module.addDependency(Dependency.Module(dependency.project.name, configuration))
+        })
         logger.warn(s"Module '${projectRef.name}' depends on '${dependency.project.name}'")
       }
     case Failure(exc) =>
