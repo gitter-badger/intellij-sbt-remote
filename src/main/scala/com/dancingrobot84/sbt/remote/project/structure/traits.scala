@@ -18,15 +18,12 @@ trait Project {
   var name: String
 
   def addModule(id: Module.Id, base: File): Module
-  def findModule(id: Module.Id): Option[Module]
   def removeModule(id: Module.Id): Unit
+  def modules: Set[Module]
 
   def addLibrary(id: Library.Id): Library
-  def findLibrary(id: Library.Id): Option[Library]
   def removeLibrary(id: Library.Id): Unit
-
-  def addDependency(moduleId: Module.Id, dependency: Dependency): Unit
-  def removeDependency(moduleId: Module.Id, dependency: Dependency): Unit
+  def libraries: Set[Library]
 
   def copy: Project
 }
@@ -38,6 +35,11 @@ trait Module {
 
   def addPath(path: Path): Unit
   def removePath(path: Path): Unit
+  def paths: Set[Path]
+
+  def addDependency(dependency: Dependency): Unit
+  def removeDependency(dependency: Dependency): Unit
+  def dependencies: Set[Dependency]
 }
 
 object Module {
@@ -48,6 +50,7 @@ trait Library {
   val id: Library.Id
 
   def addArtifact(artifact: Artifact): Unit
+  def artifacts: Set[Artifact]
 }
 
 object Library {
