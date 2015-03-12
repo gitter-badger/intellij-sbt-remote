@@ -8,12 +8,13 @@ import com.dancingrobot84.sbt.remote.project.structure.{Project, ProjectRef, Sta
 import com.intellij.openapi.externalSystem.model.{ExternalSystemException, DataNode}
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.model.task.{ExternalSystemTaskId, ExternalSystemTaskNotificationEvent, ExternalSystemTaskNotificationListener}
+import com.intellij.openapi.externalSystem.service.ImportCanceledException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
-import sbt.client.SbtClient
+import sbt.client.{SbtConnector, SbtClient}
 import sbt.protocol.{LogMessage, LogStdErr, LogStdOut, LogEvent}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Promise}
+import scala.concurrent.{Future, Await, Promise}
 import scala.util.{Failure, Success}
 
 /**
@@ -23,14 +24,17 @@ import scala.util.{Failure, Success}
 class ProjectResolver
   extends ExternalSystemProjectResolver[ExecutionSettings] {
 
+  private var projectPromise: Option[Promise[DataNode[ProjectData]]] = None
+  private var connector: Option[SbtConnector] = None
+
   def resolveProjectInfo(id: ExternalSystemTaskId,
                          projectPath: String,
                          isPreview: Boolean,
                          settings: ExecutionSettings,
                          listener: ExternalSystemTaskNotificationListener): DataNode[ProjectData] = {
     val projectFile = new File(projectPath)
-    val connector = sbtConnectorFor(projectFile)
-    val projectPromise = Promise[DataNode[ProjectData]]()
+    connector = Some(sbtConnectorFor(projectFile))
+    projectPromise = Some(Promise())
 
     val logger = new Logger {
       def log(msg: String, level: Logger.Level, cause: Option[Throwable]): Unit =
@@ -53,31 +57,40 @@ class ProjectResolver
         var project: Project = new StatefulProject(projectFile.getCanonicalFile.toURI, projectFile.getName)
       }
 
+      val extractors =
+        if (isPreview)
+          Seq(new InternalDependenciesExtractor)
+        else
+          Seq(new InternalDependenciesExtractor, new ExternalDependenciesExtractor)
+
       val extraction = for {
         _ <- new DirectoriesExtractor().attach(client, projectRef, Log)._1
-        _ <- new InternalDependenciesExtractor().attach(client, projectRef, Log)._1
-        _ <- new ExternalDependenciesExtractor().attach(client, projectRef, Log)._1
+        _ <- Future.sequence(extractors.map(_.attach(client, projectRef, Log)._1))
       } yield Unit
 
       import DataNodeConversions._
       extraction.onComplete {
-        case Success(_)   => projectPromise.success(projectRef.project.toDataNode)
-        case Failure(exc) => projectPromise.failure(new ExternalSystemException(exc))
+        case Success(_)   => projectPromise.foreach(_.trySuccess(projectRef.project.toDataNode))
+        case Failure(exc) => projectPromise.foreach(_.tryFailure(new ExternalSystemException(exc)))
       }
     }
 
     logger.info("Connecting to SBT server")
 
-    connector.open(onConnect, { (reconnect, reason) =>
+    connector.foreach(_.open(onConnect, { (reconnect, reason) =>
       if (reconnect)
         logger.warn(reason)
       else
-        projectPromise.failure(new ExternalSystemException(reason))
-    })
+        projectPromise.foreach(_.tryFailure(new ExternalSystemException(reason)))
+    }))
 
-    Await.result(projectPromise.future, Duration.Inf)
+    projectPromise.map(p => Await.result(p.future, Duration.Inf)).getOrElse(null)
   }
 
   def cancelTask(id: ExternalSystemTaskId,
-                 listener: ExternalSystemTaskNotificationListener) = true
+                 listener: ExternalSystemTaskNotificationListener) = {
+    projectPromise.foreach(_.tryFailure(new IllegalStateException("Import cancelled")))
+    connector.foreach(_.close())
+    projectPromise.map(_.isCompleted).getOrElse(true)
+  }
 }
