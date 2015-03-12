@@ -16,42 +16,48 @@ trait Project {
   val base: URI
   var name: String
 
-  def addModule(id: String, base: File): Module
-  def findModule(id: String): Option[Module]
-  def removeModule(id: String): Unit
+  def addModule(id: Module.Id, base: File): Module
+  def findModule(id: Module.Id): Option[Module]
+  def removeModule(id: Module.Id): Unit
 
-  def addLibrary(id: LibraryId): Library
-  def findLibrary(id: LibraryId): Option[Library]
-  def removeLibrary(id: LibraryId): Unit
+  def addLibrary(id: Library.Id): Library
+  def findLibrary(id: Library.Id): Option[Library]
+  def removeLibrary(id: Library.Id): Unit
 
-  def addDependency(moduleId: String, dependency: Dependency): Unit
-  def removeDependency(moduleId: String, dependency: Dependency): Unit
+  def addDependency(moduleId: Module.Id, dependency: Dependency): Unit
+  def removeDependency(moduleId: Module.Id, dependency: Dependency): Unit
 
   def copy: Project
 }
 
 trait Module {
   val base: File
-  var id: String
+  val id: Module.Id
   var name: String
 
   def addPath(path: Path): Unit
   def removePath(path: Path): Unit
 }
 
+object Module {
+  type Id = String
+}
+
 trait Library {
-  val id: LibraryId
+  val id: Library.Id
 
   def addArtifact(artifact: Artifact): Unit
 }
 
-case class LibraryId(organization: String, name: String, version: String) {
-  override def toString = s"$organization:$name:$version"
-}
+object Library {
+  case class Id(organization: String, name: String, version: String, internalVersion: Int) {
+    override def toString = s"$organization:$name:$version:$internalVersion"
+  }
 
-object LibraryId {
-  def unmanagedJarsLibraryId(moduleId: String, configuration: Configuration) =
-    LibraryId("unmanagedJars", moduleId, configuration.toString.toLowerCase)
+  object Id {
+    def forUnmanagedJars(moduleId: Module.Id, configuration: Configuration) =
+      Id("unmanaged-jars", moduleId, configuration.toString.toLowerCase, 0)
+  }
 }
 
 sealed trait Path {
@@ -74,8 +80,9 @@ object Path {
 
 sealed trait Dependency
 object Dependency {
-  case class Library(id: LibraryId, configuration: Configuration) extends Dependency
-  case class Module(id: String, configuration: Configuration) extends Dependency
+  import com.dancingrobot84.sbt.remote.project.structure.{Library => Lib, Module => Mod}
+  case class Library(id: Lib.Id, configuration: Configuration) extends Dependency
+  case class Module(id: Mod.Id, configuration: Configuration) extends Dependency
 }
 
 sealed trait Configuration

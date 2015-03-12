@@ -21,38 +21,38 @@ class StatefulProject(val base: URI, var name: String) extends Project with Clon
   private val libraries = mutable.Buffer.empty[StatefulLibrary]
   private val dependencies = mutable.Set.empty[(StatefulModule, Dependency)]
 
-  def addModule(id: String, base: File) =
+  def addModule(id: Module.Id, base: File) =
     findModule(id).getOrElse {
       val module = new StatefulModule(base, id, id)
       modules += module
       module
     }
 
-  def findModule(id: String) =
+  def findModule(id: Module.Id) =
     modules.find(_.id == id)
 
-  def removeModule(id: String) =
+  def removeModule(id: Module.Id) =
     findModule(id).foreach(modules -= _)
 
-  def addLibrary(id: LibraryId): Library =
+  def addLibrary(id: Library.Id): Library =
     findLibrary(id).getOrElse {
       val lib = new StatefulLibrary(id)
       libraries += lib
       lib
     }
 
-  def findLibrary(id: LibraryId) =
+  def findLibrary(id: Library.Id) =
     libraries.find(_.id == id)
 
-  def removeLibrary(id: LibraryId): Unit =
+  def removeLibrary(id: Library.Id): Unit =
     findLibrary(id).foreach(libraries -= _)
 
-  def addDependency(moduleId: String, dependency: Dependency) =
+  def addDependency(moduleId: Module.Id, dependency: Dependency) =
     findModule(moduleId).foreach { m =>
       dependencies += Tuple2(m, dependency)
     }
 
-  def removeDependency(moduleId: String, dependency: Dependency) =
+  def removeDependency(moduleId: Module.Id, dependency: Dependency) =
     findModule(moduleId).foreach { m =>
       dependencies -= Tuple2(m, dependency)
     }
@@ -85,14 +85,11 @@ class StatefulProject(val base: URI, var name: String) extends Project with Clon
   }
 }
 
-class StatefulModule(val base: File, var id: String, var name: String) extends Module {
+class StatefulModule(val base: File, val id: Module.Id, var name: String) extends Module {
   private val paths = mutable.Set.empty[Path]
 
   def addPath(path: Path) =
     paths += path
-
-  def hasPath(path: Path) =
-    paths.contains(path)
 
   def removePath(path: Path) =
     paths -= path
@@ -114,7 +111,7 @@ class StatefulModule(val base: File, var id: String, var name: String) extends M
   }
 }
 
-class StatefulLibrary(val id: LibraryId) extends Library {
+class StatefulLibrary(val id: Library.Id) extends Library {
   private val artifacts = mutable.Set.empty[Artifact]
 
   def addArtifact(artifact: Artifact) =
@@ -167,7 +164,7 @@ object Helpers {
                    moduleNodes: Seq[DataNode[ModuleData]]): Option[DataNode[_ <: AbstractDependencyData[_]]] = {
 
       def addLibraryDependency
-          (libraryId: LibraryId, configuration: Configuration):
+          (libraryId: Library.Id, configuration: Configuration):
           Option[DataNode[_ <: AbstractDependencyData[_]]] =
         libraryNodes.find(_.getData.getExternalName == libraryId.toString).map { libraryNode =>
           val libDepData = new LibraryDependencyData(parent.getData, libraryNode.getData, LibraryLevel.PROJECT)

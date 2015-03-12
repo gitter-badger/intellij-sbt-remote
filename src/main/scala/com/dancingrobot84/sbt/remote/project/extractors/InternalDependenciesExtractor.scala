@@ -29,7 +29,7 @@ class InternalDependenciesExtractor extends Extractor.Adapter {
       (implicit ctx: Extractor.Context): Unit = result match {
     case Success(jars) => ifProjectAccepted(key.scope.project) { p =>
       withProject { project =>
-        val lib = project.addLibrary(LibraryId.unmanagedJarsLibraryId(p.name, conf))
+        val lib = project.addLibrary(Library.Id.forUnmanagedJars(p.name, conf))
         jars.foreach { f =>
           logger.warn(s"Library '${lib.id}' adds '${f.data}' to itself")
           lib.addArtifact(Artifact.Binary(f.data))
