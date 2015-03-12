@@ -1,11 +1,11 @@
-package com.dancingrobot84.sbt.remote
-package project
-package extractors
+package com.dancingrobot84.sbt.remote.external
 
 import java.io.File
-import com.intellij.openapi.externalSystem.model.{ProjectKeys, DataNode}
-import com.intellij.openapi.externalSystem.model.project._
+
+import com.dancingrobot84.sbt.remote.external
 import com.dancingrobot84.sbt.remote.project.structure._
+import com.intellij.openapi.externalSystem.model.project._
+import com.intellij.openapi.externalSystem.model.{DataNode, ProjectKeys}
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.roots.DependencyScope
 
