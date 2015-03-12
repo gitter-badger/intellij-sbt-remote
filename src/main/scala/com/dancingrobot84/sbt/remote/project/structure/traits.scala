@@ -2,6 +2,7 @@ package com.dancingrobot84.sbt.remote.project.structure
 
 import java.io.File
 import java.net.URI
+import sbt.ModuleID
 
 /**
  * @author: Nikolay Obedin
@@ -52,11 +53,19 @@ trait Library {
 object Library {
   case class Id(organization: String, name: String, version: String, internalVersion: Int) {
     override def toString = s"$organization:$name:$version:$internalVersion"
+
+    def ~=(otherId: Library.Id) =
+      organization == otherId.organization &&
+      name == otherId.name &&
+      version == otherId.version
   }
 
   object Id {
     def forUnmanagedJars(moduleId: Module.Id, configuration: Configuration) =
       Id("unmanaged-jars", moduleId, configuration.toString.toLowerCase, 0)
+
+    def fromSbtModuleId(moduleId: ModuleID) =
+      Id(moduleId.organization, moduleId.name, moduleId.revision, 0)
   }
 }
 
