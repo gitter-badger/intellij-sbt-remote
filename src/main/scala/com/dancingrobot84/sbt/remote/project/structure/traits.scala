@@ -51,6 +51,9 @@ trait Library {
 
   def addArtifact(artifact: Artifact): Unit
   def artifacts: Set[Artifact]
+
+  def binaries: Set[Artifact] =
+    artifacts.collect { case a: Artifact.Binary => a }
 }
 
 object Library {
@@ -114,7 +117,9 @@ object Configuration {
   }
 }
 
-sealed trait Artifact
+sealed trait Artifact {
+  val file: File
+}
 object Artifact {
   case class Binary(file: File) extends Artifact
   case class Source(file: File) extends Artifact

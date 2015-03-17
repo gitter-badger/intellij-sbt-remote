@@ -43,9 +43,9 @@ trait ExternalDependenciesExtractor extends Extractor {
 
     withProject { project =>
       project.modules.find(_.id == moduleId).foreach { module =>
-        val allLibs      = project.libraries.find(_.id ~= libId)
+        val allLibs      = project.libraries.filter(_.id ~= libId)
         val lastVersion  = allLibs.foldLeft(-1)(_ max _.id.internalVersion)
-        val libInProject = allLibs.filter(_.artifacts == artifacts).headOption
+        val libInProject = allLibs.find(_.binaries == artifacts)
                                   .getOrElse(project.addLibrary(libId.copy(internalVersion = lastVersion + 1)))
         artifacts.foreach { artifact =>
           libInProject.addArtifact(artifact)
