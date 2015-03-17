@@ -18,6 +18,5 @@ val versions = new {
 
 libraryDependencies ++= Seq(
   "com.typesafe.sbtrc" % "client-2-10" % versions.sbtRemoteClient,
-  "org.scala-sbt" % "main" % versions.sbt,
   "org.scala-sbt" % "ivy" % versions.sbt
 )
