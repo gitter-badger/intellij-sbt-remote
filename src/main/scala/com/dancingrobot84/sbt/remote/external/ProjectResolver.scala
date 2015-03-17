@@ -62,7 +62,8 @@ class ProjectResolver
           Seq(new InternalDependenciesExtractor with SynchronizedContext)
         else
           Seq(new InternalDependenciesExtractor with SynchronizedContext,
-              new ExternalDependenciesExtractor with SynchronizedContext)
+              new ExternalDependenciesExtractor with SynchronizedContext,
+              new ClassifiersExtractor with SynchronizedContext)
 
       val extraction = for {
         _ <- (new DirectoriesExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
