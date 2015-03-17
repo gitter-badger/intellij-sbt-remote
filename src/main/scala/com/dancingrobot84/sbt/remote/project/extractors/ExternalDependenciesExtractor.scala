@@ -12,9 +12,9 @@ import scala.util.{Failure, Success, Try}
  * @author: Nikolay Obedin
  * @since: 3/11/15.
  */
-class ExternalDependenciesExtractor extends Extractor.Adapter {
+trait ExternalDependenciesExtractor extends Extractor {
 
-  def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
+  protected def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
     for {
       _ <- watchTaskKey[sbt.UpdateReport]("update")(updateWatcher)
     } yield Unit

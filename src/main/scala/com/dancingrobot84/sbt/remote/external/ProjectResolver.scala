@@ -59,12 +59,13 @@ class ProjectResolver
 
       val extractors =
         if (isPreview)
-          Seq(new InternalDependenciesExtractor)
+          Seq(new InternalDependenciesExtractor with SynchronizedContext)
         else
-          Seq(new InternalDependenciesExtractor, new ExternalDependenciesExtractor)
+          Seq(new InternalDependenciesExtractor with SynchronizedContext,
+              new ExternalDependenciesExtractor with SynchronizedContext)
 
       val extraction = for {
-        _ <- new DirectoriesExtractor().attach(client, projectRef, Log)._1
+        _ <- (new DirectoriesExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
         _ <- Future.sequence(extractors.map(_.attach(client, projectRef, Log)._1))
       } yield Unit
 

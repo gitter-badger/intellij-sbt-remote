@@ -14,9 +14,9 @@ import scala.util.{Failure, Success, Try}
  * @author: Nikolay Obedin
  * @since: 2/20/15.
  */
-class InternalDependenciesExtractor extends Extractor.Adapter {
+trait InternalDependenciesExtractor extends Extractor {
 
-  def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
+  protected def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
     for {
       _ <- watchSettingKey[BuildDependencies]("buildDependencies")(buildDependenciesWatcher)
       _ <- watchTaskKey[Seq[Attributed[File]]]("unmanagedJars")(classpathWatcher(Configuration.Compile))
