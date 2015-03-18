@@ -15,7 +15,7 @@ import sbt.protocol.{ LogMessage, LogStdErr, LogStdOut, LogEvent }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Future, Await, Promise }
-import scala.util.{ Failure, Success }
+import scala.util.{Try, Failure, Success}
 
 /**
  * @author Nikolay Obedin
@@ -72,7 +72,7 @@ class ProjectResolver
 
         import DataNodeConversions._
         extraction.onComplete {
-          case Success(_)   => projectPromise.foreach(_.trySuccess(projectRef.project.toDataNode))
+          case Success(_)   => projectPromise.foreach(_.tryComplete(Try(projectRef.project.toDataNode)))
           case Failure(exc) => projectPromise.foreach(_.tryFailure(new ExternalSystemException(exc)))
         }
       }
