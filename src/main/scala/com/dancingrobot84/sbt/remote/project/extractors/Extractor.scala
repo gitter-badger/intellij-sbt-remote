@@ -17,13 +17,17 @@ import scala.util.Try
  * @since: 2/18/15.
  */
 trait Extractor {
-  protected def doAttach(implicit ctx: Extractor.Context): Future[Unit]
+  def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription)
+}
 
-  protected def createContext
-      (client: SbtClient,
-      logger: Logger,
-      acceptedProjects: Vector[ProjectReference],
-      projectRef: ProjectRef): Extractor.Context
+trait Context {
+  def getContext
+      (client: SbtClient, logger: Logger, acceptedProjects: Vector[ProjectReference],projectRef: ProjectRef):
+      Extractor.Context
+}
+
+abstract class ExtractorAdapter extends Extractor with Context {
+  protected def doAttach(implicit ctx: Extractor.Context): Future[Unit]
 
   private val subscriptions = mutable.Buffer.empty[Subscription]
 
@@ -85,7 +89,7 @@ trait Extractor {
   protected def logger(implicit ctx: Extractor.Context): Logger =
     ctx.logger
 
-  def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription) = {
+  override def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription) = {
     val initPromise = Promise[Unit]()
 
     addSubscription(client.watchBuild { case MinimalBuildStructure(builds, allProjects) =>
@@ -99,7 +103,7 @@ trait Extractor {
         if(acceptedProjects.isEmpty)
           initPromise.failure(new Error("No suitable modules found"))
         else
-          doAttach(createContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
+          doAttach(getContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
       }.getOrElse {
         initPromise.failure(new Error("No project found"))
       }
@@ -112,8 +116,8 @@ trait Extractor {
   }
 }
 
-trait SynchronizedContext extends Extractor {
-  protected def createContext
+trait SynchronizedContext extends Context {
+  override def getContext
       (client0: SbtClient,
       logger0: Logger,
       acceptedProjects0: Vector[ProjectReference],

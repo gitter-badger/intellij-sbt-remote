@@ -15,9 +15,9 @@ import scala.util.{Failure, Success, Try}
  * @author: Nikolay Obedin
  * @since: 2/18/15.
  */
-trait DirectoriesExtractor extends Extractor {
+abstract class DirectoriesExtractor extends ExtractorAdapter {
 
-  protected def doAttach(implicit ctx: Extractor.Context): Future[Unit] =
+  override def doAttach(implicit ctx: Extractor.Context): Future[Unit] =
     for {
       _ <- watchSettingKey[File]("baseDirectory")(baseDirWatcher)
       _ <- watchSettingKey[String]("name")(nameWatcher)

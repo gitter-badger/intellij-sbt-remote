@@ -14,9 +14,9 @@ import scala.util.{Failure, Success, Try}
  * @author: Nikolay Obedin
  * @since: 3/17/15.
  */
-trait ClassifiersExtractor extends Extractor {
+abstract class ClassifiersExtractor extends ExtractorAdapter {
 
-  protected def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
+  override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
     for {
       _ <- watchTaskKey[sbt.UpdateReport]("updateClassifiers")(updateWatcher)
     } yield Unit
@@ -29,7 +29,7 @@ trait ClassifiersExtractor extends Extractor {
       updateReport.configurations.foreach(_.modules.foreach(m => addSources(p.name, m)))
     }
     case Failure(exc) =>
-      ctx.logger.error(s"Failed retrieving 'updateClassifiers' key", exc)
+      logger.error(s"Failed retrieving 'updateClassifiers' key", exc)
   }
 
   private def addSources

@@ -12,9 +12,9 @@ import scala.util.{Failure, Success, Try}
  * @author: Nikolay Obedin
  * @since: 3/11/15.
  */
-trait ExternalDependenciesExtractor extends Extractor {
+abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
 
-  protected def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
+  override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
     for {
       _ <- watchTaskKey[sbt.UpdateReport]("update")(updateWatcher)
     } yield Unit
@@ -31,7 +31,7 @@ trait ExternalDependenciesExtractor extends Extractor {
       }
     }
     case Failure(exc) =>
-      ctx.logger.error(s"Failed retrieving 'update' key", exc)
+      logger.error(s"Failed retrieving 'update' key", exc)
   }
 
   private def addLibraryDependency
