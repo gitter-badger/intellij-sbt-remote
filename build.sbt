@@ -1,3 +1,5 @@
+import scalariform.formatter.preferences._
+
 val commonSettings = Seq(
   name := "intellij-sbt-remote",
   organization := "com.dancingrobot84",
@@ -9,7 +11,7 @@ val commonSettings = Seq(
   assemblyExcludedJars in assembly <<= ideaFullJars
 )
 
-ideaPluginSettings ++ commonSettings
+ideaPluginSettings ++ commonSettings ++ scalariformSettings
 
 val versions = new {
   val sbt = "0.13.8-RC1"
@@ -20,3 +22,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.sbtrc" % "client-2-10" % versions.sbtRemoteClient,
   "org.scala-sbt" % "ivy" % versions.sbt
 )
+
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(AlignParameters, true)
+  .setPreference(AlignSingleLineCaseStatements, true)
+  .setPreference(DoubleIndentClassDeclaration, true)
+  .setPreference(IndentLocalDefs, true)
+  .setPreference(IndentPackageBlocks, false)
+  .setPreference(PreserveDanglingCloseParenthesis, true)
