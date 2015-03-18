@@ -5,6 +5,7 @@ import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutio
 import com.intellij.openapi.externalSystem.service.project.PlatformFacade
 import com.intellij.openapi.externalSystem.settings.{ AbstractExternalSystemLocalSettings, AbstractExternalSystemSettings, ExternalProjectSettings, ExternalSystemSettingsListener }
 import com.intellij.openapi.project.Project
+import scala.beans.BeanProperty
 import com.intellij.util.containers.ContainerUtilRt
 import com.intellij.util.messages.{ Topic => ExternalSystemTopic }
 
@@ -57,18 +58,20 @@ object SystemSettings {
   }
 }
 
-final class ProjectSettings
+final class ProjectSettings(
+  var resolveClassifiers: Boolean,
+  var resolveSbtClassifiers: Boolean)
     extends ExternalProjectSettings {
 
   override def clone(): ExternalProjectSettings = {
-    val s = new ProjectSettings
-    copyTo(s)
-    s
+    val result = new ProjectSettings(resolveClassifiers, resolveSbtClassifiers)
+    copyTo(result)
+    result
   }
 }
 
 object ProjectSettings {
-  def apply() = new ProjectSettings
+  def apply() = new ProjectSettings(false, false)
 }
 
 @State(
@@ -98,8 +101,10 @@ object LocalSettings {
     extends AbstractExternalSystemLocalSettings.State
 }
 
-final class ExecutionSettings
-  extends ExternalSystemExecutionSettings
+final class ExecutionSettings(
+  val resolveClassifiers: Boolean,
+  val resolveSbtClassifiers: Boolean)
+    extends ExternalSystemExecutionSettings
 
 trait ProjectSettingsListener
   extends ExternalSystemSettingsListener[ProjectSettings]

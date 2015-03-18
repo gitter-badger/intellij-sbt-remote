@@ -5,8 +5,9 @@ import java.net.URL
 
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.ide.actions.OpenProjectFileChooserDescriptor
-import com.intellij.openapi.externalSystem.{ ExternalSystemManager => IdeaExternalSystemManager }
-import com.intellij.openapi.project.Project
+import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.externalSystem
+import com.intellij.openapi.{ project => idea }
 import com.intellij.openapi.vfs.VirtualFile
 
 /**
@@ -14,19 +15,20 @@ import com.intellij.openapi.vfs.VirtualFile
  * @since 2/5/15.
  */
 final class ExternalSystemManager
-    extends IdeaExternalSystemManager[ProjectSettings, ProjectSettingsListener, SystemSettings, LocalSettings, ExecutionSettings] {
+    extends externalSystem.ExternalSystemManager[ProjectSettings, ProjectSettingsListener, SystemSettings, LocalSettings, ExecutionSettings]
+    with externalSystem.ExternalSystemConfigurableAware {
 
-  def getSystemId = Id
+  override def getSystemId = Id
 
-  def getSettingsProvider = SystemSettings.apply _
+  override def getSettingsProvider = SystemSettings.apply _
 
-  def getLocalSettingsProvider = LocalSettings.apply _
+  override def getLocalSettingsProvider = LocalSettings.apply _
 
-  def getProjectResolverClass = classOf[ProjectResolver]
+  override def getProjectResolverClass = classOf[ProjectResolver]
 
-  def getTaskManagerClass = classOf[TaskManager]
+  override def getTaskManagerClass = classOf[TaskManager]
 
-  def getExternalProjectDescriptor = new OpenProjectFileChooserDescriptor(true) {
+  override def getExternalProjectDescriptor = new OpenProjectFileChooserDescriptor(true) {
     override def isFileVisible(file: VirtualFile, showHidden: Boolean): Boolean =
       super.isFileVisible(file, showHidden) &&
         (file.isDirectory || file.getName.endsWith(".sbt"))
@@ -35,10 +37,18 @@ final class ExternalSystemManager
       super.isFileSelectable(file) && ImportUtil.canImportFrom(file)
   }
 
-  def getExecutionSettingsProvider =
-    { (project: Project, path: String) => new ExecutionSettings }
+  override def getExecutionSettingsProvider = { (project: idea.Project, path: String) =>
+    val projectSettings = Option(SystemSettings(project).getLinkedProjectSettings(path))
+      .getOrElse(ProjectSettings())
+    new ExecutionSettings(projectSettings.resolveClassifiers,
+      projectSettings.resolveSbtClassifiers)
+  }
 
-  def enhanceLocalProcessing(urls: java.util.List[URL]): Unit = {}
+  override def enhanceLocalProcessing(urls: java.util.List[URL]): Unit = {}
 
-  def enhanceRemoteProcessing(parameters: SimpleJavaParameters): Unit = {}
+  override def enhanceRemoteProcessing(parameters: SimpleJavaParameters): Unit = {}
+
+  override def getConfigurable(project: idea.Project): Configurable = {
+    new ExternalSystemConfigurable(project)
+  }
 }

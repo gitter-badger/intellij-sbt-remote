@@ -20,6 +20,8 @@
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.LocalSettings"/>
         <projectImportProvider implementation="com.dancingrobot84.sbt.remote.external.ProjectImportProvider"/>
         <projectImportBuilder implementation="com.dancingrobot84.sbt.remote.external.ProjectImportBuilder"/>
+        <projectConfigurable groupId="build.tools" displayName="SBT Remote"
+                             instance="com.dancingrobot84.sbt.remote.external.ExternalSystemConfigurable" />
     </extensions>
 
 </idea-plugin>

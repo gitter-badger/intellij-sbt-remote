@@ -14,15 +14,7 @@ class ImportControl
 
   def onLinkedProjectPathChange(newPath: String): Unit = {}
 
-  def createProjectSettingsControl(settings: ProjectSettings) = new ExternalSystemSettingsControl[ProjectSettings] {
-    override def isModified: Boolean = false
-    override def showUi(show: Boolean): Unit = {}
-    override def fillUi(canvas: PaintAwarePanel, indentLevel: Int): Unit = {}
-    override def validate(settings: ProjectSettings): Boolean = true
-    override def disposeUIResources(): Unit = {}
-    override def apply(settings: ProjectSettings): Unit = {}
-    override def reset(): Unit = {}
-  }
+  def createProjectSettingsControl(settings: ProjectSettings) = new controls.ProjectSettingsControl(settings)
 
-  def createSystemSettingsControl(settings: SystemSettings) = null
+  def createSystemSettingsControl(settings: SystemSettings) = new controls.SystemSettingsControl(settings)
 }

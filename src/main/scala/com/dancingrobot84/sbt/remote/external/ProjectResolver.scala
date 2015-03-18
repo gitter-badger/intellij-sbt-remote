@@ -15,7 +15,7 @@ import sbt.protocol.{ LogMessage, LogStdErr, LogStdOut, LogEvent }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Future, Await, Promise }
-import scala.util.{Try, Failure, Success}
+import scala.util.{ Try, Failure, Success }
 
 /**
  * @author Nikolay Obedin
@@ -60,10 +60,13 @@ class ProjectResolver
         val extractors =
           if (isPreview)
             Seq(new InternalDependenciesExtractor with SynchronizedContext)
-          else
+          else if (settings.resolveClassifiers)
             Seq(new InternalDependenciesExtractor with SynchronizedContext,
               new ExternalDependenciesExtractor with SynchronizedContext,
               new ClassifiersExtractor with SynchronizedContext)
+          else
+            Seq(new InternalDependenciesExtractor with SynchronizedContext,
+              new ExternalDependenciesExtractor with SynchronizedContext)
 
         val extraction = for {
           _ <- (new DirectoriesExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
