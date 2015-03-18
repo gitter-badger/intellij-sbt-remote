@@ -8,7 +8,6 @@
         <element id="library" level="project" name="SBT: org.scala-sbt:interface:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:launcher-interface:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: com.jcraft:jsch:0.1.46:jar" />
-        <element id="library" level="project" name="SBT: com.typesafe.sbtrc:client-2-10:1.0-6899f43d9872193adcf40b6c0d2838d4a968d5f3:jar" />
         <element id="library" level="project" name="SBT: jline:jline:2.11:jar" />
         <element id="library" level="project" name="SBT: org.json4s:json4s-ast_2.10:3.2.10:jar" />
         <element id="library" level="project" name="SBT: org.json4s:json4s-core_2.10:3.2.10:jar" />
@@ -17,42 +16,18 @@
         <element id="library" level="project" name="SBT: org.scala-lang:scala-library:2.10.4:jar" />
         <element id="library" level="project" name="SBT: org.scala-lang:scala-reflect:2.10.4:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt.ivy:ivy:2.3.0-sbt-fccfbd44c9f64523b61398a0155784dcbaeae28f:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:actions:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:api:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:apply-macro:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:cache:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:classfile:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:classpath:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:collections:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:command:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:compile:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:compiler-integration:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:compiler-ivy-integration:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:completion:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:control:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:cross:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:incremental-compiler:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:io:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:ivy:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:logging:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:logic:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:main-settings:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:main:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:persist:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:process:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:relation:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:run:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:task-system:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:tasks:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:test-agent:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:test-interface:1.0:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:testing:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:tracking:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-tools.sbinary:sbinary_2.10:0.4.2:jar" />
         <element id="library" level="project" name="SBT: org.scalamacros:quasiquotes_2.10:2.0.1:jar" />
         <element id="library" level="project" name="SBT: org.spire-math:jawn-parser_2.10:0.6.0:jar" />
         <element id="library" level="project" name="SBT: org.spire-math:json4s-support_2.10:0.6.0:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:serialization_2.10:0.1.1:jar" />
+        <element id="library" level="project" name="SBT: com.typesafe.sbtrc:client-2-10:1.0-0c4f8149883708a2647e535b34c8d36806927791:jar" />
       </element>
     </root>
   </artifact>

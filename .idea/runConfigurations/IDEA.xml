@@ -2,7 +2,7 @@
   <configuration default="false" name="IDEA" type="Application" factoryName="Application">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
     <option name="MAIN_CLASS_NAME" value="com.intellij.idea.Main" />
-    <option name="VM_PARAMETERS" value="-Xmx800m -XX:ReservedCodeCacheSize=64m -XX:MaxPermSize=250m -XX:+HeapDumpOnOutOfMemoryError -ea -Didea.is.internal=true -Didea.debug.mode=true -Didea.system.path=$USER_HOME$/.IdeaData/IDEA-14/scala/system -Didea.config.path=$USER_HOME$/.IdeaData/IDEA-14/scala/config -Dapple.laf.useScreenMenuBar=true -Dplugin.path=$PROJECT_DIR$/target/artifact/ -Didea.ProcessCanceledException=disabled" />
+    <option name="VM_PARAMETERS" value="-Xmx800m -XX:ReservedCodeCacheSize=64m -XX:MaxPermSize=250m -XX:+HeapDumpOnOutOfMemoryError -ea -Didea.is.internal=true -Didea.debug.mode=true -Didea.system.path=$USER_HOME$/.IdeaData/IDEA-14-Remote/scala/system -Didea.config.path=$USER_HOME$/.IdeaData/IDEA-14-Remote/scala/config -Dapple.laf.useScreenMenuBar=true -Dplugin.path=$PROJECT_DIR$/target/artifact/ -Didea.ProcessCanceledException=disabled" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/idea/14.0.3" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
