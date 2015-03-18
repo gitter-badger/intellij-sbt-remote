@@ -8,7 +8,7 @@ import sbt.protocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 /**
  * @author: Nikolay Obedin
@@ -22,9 +22,8 @@ abstract class ClassifiersExtractor extends ExtractorAdapter {
     } yield Unit
   }
 
-  private def updateWatcher
-      (key: ScopedKey, result: Try[sbt.UpdateReport])
-      (implicit ctx: Extractor.Context): Unit = result match {
+  private def updateWatcher(key: ScopedKey, result: Try[sbt.UpdateReport])(
+    implicit ctx: Extractor.Context): Unit = result match {
     case Success(updateReport) => ifProjectAccepted(key.scope.project) { p =>
       updateReport.configurations.foreach(_.modules.foreach(m => addSources(p.name, m)))
     }
@@ -32,14 +31,13 @@ abstract class ClassifiersExtractor extends ExtractorAdapter {
       logger.error(s"Failed retrieving 'updateClassifiers' key", exc)
   }
 
-  private def addSources
-      (moduleId: Module.Id, moduleReport: ModuleReport)
-      (implicit ctx: Extractor.Context): Unit = {
+  private def addSources(moduleId: Module.Id, moduleReport: ModuleReport)(
+    implicit ctx: Extractor.Context): Unit = {
     val libId = Library.Id.fromSbtModuleId(moduleReport.module)
     val artifacts = {
       val grouped = moduleReport.artifacts.groupBy(_._1.`type`)
       val sources = grouped.getOrElse("src", Seq.empty)
-      val docs    = grouped.getOrElse("doc", Seq.empty)
+      val docs = grouped.getOrElse("doc", Seq.empty)
       val toArtifact = (t: File => Artifact) => (f: (sbt.Artifact, File)) => t(f._2)
       (sources.map(toArtifact(Artifact.Source)) ++
         docs.map(toArtifact(Artifact.Doc))).toSet
@@ -48,8 +46,8 @@ abstract class ClassifiersExtractor extends ExtractorAdapter {
 
     withProject { project =>
       for {
-        module   <- project.modules.find(_.id == moduleId)
-        lib      <- project.libraries.filter(_.id ~= libId)
+        module <- project.modules.find(_.id == moduleId)
+        lib <- project.libraries.filter(_.id ~= libId)
         artifact <- artifacts
       } {
         lib.addArtifact(artifact)

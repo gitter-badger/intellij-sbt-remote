@@ -1,7 +1,7 @@
 package com.dancingrobot84.sbt.remote.external
 
 import com.intellij.openapi.externalSystem.service.settings.AbstractImportFromExternalSystemControl
-import com.intellij.openapi.externalSystem.util.{ExternalSystemSettingsControl, PaintAwarePanel}
+import com.intellij.openapi.externalSystem.util.{ ExternalSystemSettingsControl, PaintAwarePanel }
 import com.intellij.openapi.project.ProjectManager
 
 /**
@@ -9,8 +9,8 @@ import com.intellij.openapi.project.ProjectManager
  * @since 2/5/15.
  */
 class ImportControl
-  extends AbstractImportFromExternalSystemControl[ProjectSettings, ProjectSettingsListener, SystemSettings](
-    Id, SystemSettings(ProjectManager.getInstance().getDefaultProject), ProjectSettings()) {
+    extends AbstractImportFromExternalSystemControl[ProjectSettings, ProjectSettingsListener, SystemSettings](
+      Id, SystemSettings(ProjectManager.getInstance().getDefaultProject), ProjectSettings()) {
 
   def onLinkedProjectPathChange(newPath: String): Unit = {}
 

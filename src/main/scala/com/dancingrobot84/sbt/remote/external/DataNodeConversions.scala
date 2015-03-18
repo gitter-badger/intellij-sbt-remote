@@ -5,10 +5,9 @@ import java.io.File
 import com.dancingrobot84.sbt.remote.external
 import com.dancingrobot84.sbt.remote.project.structure._
 import com.intellij.openapi.externalSystem.model.project._
-import com.intellij.openapi.externalSystem.model.{DataNode, ProjectKeys}
+import com.intellij.openapi.externalSystem.model.{ DataNode, ProjectKeys }
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.roots.DependencyScope
-
 
 /**
  * @author: Nikolay Obedin
@@ -24,7 +23,7 @@ object DataNodeConversions {
         null)
 
       val libraryNodes = project.libraries.map(_.toDataNode(projectNode))
-      val moduleNodes  = project.modules.map(_.toDataNode(projectNode))
+      val moduleNodes = project.modules.map(_.toDataNode(projectNode))
       val dependencies = project.modules.flatMap(m => m.dependencies.map(d => (m, d)))
 
       for {
@@ -79,9 +78,9 @@ object DataNodeConversions {
           data.storePath(ExternalSystemSourceType.TEST, base.getAbsolutePath)
         case Path.GenTestSource(base) =>
           data.storePath(ExternalSystemSourceType.TEST_GENERATED, base.getAbsolutePath)
-        case path@(Path.Resource(_) | Path.GenResource(_))=>
+        case path @ (Path.Resource(_) | Path.GenResource(_)) =>
           data.storePath(ExternalSystemSourceType.RESOURCE, path.base.getAbsolutePath)
-        case path@(Path.TestResource(_) | Path.GenTestResource(_)) =>
+        case path @ (Path.TestResource(_) | Path.GenTestResource(_)) =>
           data.storePath(ExternalSystemSourceType.TEST_RESOURCE, path.base.getAbsolutePath)
         case Path.Exclude(base) =>
           data.storePath(ExternalSystemSourceType.EXCLUDED, base.getAbsolutePath)
@@ -96,34 +95,30 @@ object DataNodeConversions {
 
   implicit class DataNodeDependency(dependency: Dependency) {
     def toDataNode(parent: DataNode[ModuleData],
-      libraryNodes: Set[DataNode[LibraryData]],
-      moduleNodes: Set[DataNode[ModuleData]]): Option[DataNode[_ <: AbstractDependencyData[_]]] = {
+                   libraryNodes: Set[DataNode[LibraryData]],
+                   moduleNodes: Set[DataNode[ModuleData]]): Option[DataNode[_ <: AbstractDependencyData[_]]] = {
 
-      def addLibraryDependency
-      (libraryId: Library.Id, configuration: Configuration):
-      Option[DataNode[_ <: AbstractDependencyData[_]]] =
-        libraryNodes.find(_.getData.getExternalName == libraryId.toString).map { libraryNode =>
-          val libDepData = new LibraryDependencyData(parent.getData, libraryNode.getData, LibraryLevel.PROJECT)
-          setScopeByConf(libDepData, configuration)
-          new DataNode(ProjectKeys.LIBRARY_DEPENDENCY, libDepData, parent)
-        }
+        def addLibraryDependency(libraryId: Library.Id, configuration: Configuration): Option[DataNode[_ <: AbstractDependencyData[_]]] =
+          libraryNodes.find(_.getData.getExternalName == libraryId.toString).map { libraryNode =>
+            val libDepData = new LibraryDependencyData(parent.getData, libraryNode.getData, LibraryLevel.PROJECT)
+            setScopeByConf(libDepData, configuration)
+            new DataNode(ProjectKeys.LIBRARY_DEPENDENCY, libDepData, parent)
+          }
 
-      def addModuleDependency
-      (dependencyId: String, configuration: Configuration):
-      Option[DataNode[_ <: AbstractDependencyData[_]]] =
-        moduleNodes.find(_.getData.getId == dependencyId).map { masterNode =>
-          val moduleDepData = new ModuleDependencyData(parent.getData, masterNode.getData)
-          setScopeByConf(moduleDepData, configuration)
-          new DataNode(ProjectKeys.MODULE_DEPENDENCY, moduleDepData, parent)
-        }
+        def addModuleDependency(dependencyId: String, configuration: Configuration): Option[DataNode[_ <: AbstractDependencyData[_]]] =
+          moduleNodes.find(_.getData.getId == dependencyId).map { masterNode =>
+            val moduleDepData = new ModuleDependencyData(parent.getData, masterNode.getData)
+            setScopeByConf(moduleDepData, configuration)
+            new DataNode(ProjectKeys.MODULE_DEPENDENCY, moduleDepData, parent)
+          }
 
-      def setScopeByConf(dependencyData: AbstractDependencyData[_], configuration: Configuration): Unit =
-        configuration match {
-          case Configuration.Compile  => dependencyData.setScope(DependencyScope.COMPILE)
-          case Configuration.Test     => dependencyData.setScope(DependencyScope.TEST)
-          case Configuration.Runtime  => dependencyData.setScope(DependencyScope.RUNTIME)
-          case Configuration.Provided => dependencyData.setScope(DependencyScope.PROVIDED)
-        }
+        def setScopeByConf(dependencyData: AbstractDependencyData[_], configuration: Configuration): Unit =
+          configuration match {
+            case Configuration.Compile  => dependencyData.setScope(DependencyScope.COMPILE)
+            case Configuration.Test     => dependencyData.setScope(DependencyScope.TEST)
+            case Configuration.Runtime  => dependencyData.setScope(DependencyScope.RUNTIME)
+            case Configuration.Provided => dependencyData.setScope(DependencyScope.PROVIDED)
+          }
 
       dependency match {
         case Dependency.Library(libId, conf) => addLibraryDependency(libId, conf)

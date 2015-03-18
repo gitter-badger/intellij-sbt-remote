@@ -62,8 +62,8 @@ object Library {
 
     def ~=(otherId: Library.Id) =
       organization == otherId.organization &&
-      name == otherId.name &&
-      version == otherId.version
+        name == otherId.name &&
+        version == otherId.version
   }
 
   object Id {
@@ -95,16 +95,16 @@ object Path {
 
 sealed trait Dependency
 object Dependency {
-  import com.dancingrobot84.sbt.remote.project.structure.{Library => Lib, Module => Mod}
+  import com.dancingrobot84.sbt.remote.project.structure.{ Library => Lib, Module => Mod }
   case class Library(id: Lib.Id, configuration: Configuration) extends Dependency
   case class Module(id: Mod.Id, configuration: Configuration) extends Dependency
 }
 
 sealed trait Configuration
 object Configuration {
-  case object Test     extends Configuration
-  case object Compile  extends Configuration
-  case object Runtime  extends Configuration
+  case object Test extends Configuration
+  case object Compile extends Configuration
+  case object Runtime extends Configuration
   case object Provided extends Configuration
 
   // TODO: this is very naive, need proper configuration parser

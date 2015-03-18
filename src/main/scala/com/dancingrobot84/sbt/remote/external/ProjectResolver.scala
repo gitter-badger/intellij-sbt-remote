@@ -4,25 +4,25 @@ package external
 import java.io.File
 
 import com.dancingrobot84.sbt.remote.project.extractors._
-import com.dancingrobot84.sbt.remote.project.structure.{Project, ProjectRef, StatefulProject}
-import com.intellij.openapi.externalSystem.model.{ExternalSystemException, DataNode}
+import com.dancingrobot84.sbt.remote.project.structure.{ Project, ProjectRef, StatefulProject }
+import com.intellij.openapi.externalSystem.model.{ ExternalSystemException, DataNode }
 import com.intellij.openapi.externalSystem.model.project.ProjectData
-import com.intellij.openapi.externalSystem.model.task.{ExternalSystemTaskId, ExternalSystemTaskNotificationEvent, ExternalSystemTaskNotificationListener}
+import com.intellij.openapi.externalSystem.model.task.{ ExternalSystemTaskId, ExternalSystemTaskNotificationEvent, ExternalSystemTaskNotificationListener }
 import com.intellij.openapi.externalSystem.service.ImportCanceledException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
-import sbt.client.{SbtConnector, SbtClient}
-import sbt.protocol.{LogMessage, LogStdErr, LogStdOut, LogEvent}
+import sbt.client.{ SbtConnector, SbtClient }
+import sbt.protocol.{ LogMessage, LogStdErr, LogStdOut, LogEvent }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Future, Await, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ Future, Await, Promise }
+import scala.util.{ Failure, Success }
 
 /**
  * @author Nikolay Obedin
  * @since 2/5/15.
  */
 class ProjectResolver
-  extends ExternalSystemProjectResolver[ExecutionSettings] {
+    extends ExternalSystemProjectResolver[ExecutionSettings] {
 
   private var projectPromise: Option[Promise[DataNode[ProjectData]]] = None
   private var connector: Option[SbtConnector] = None
@@ -41,41 +41,41 @@ class ProjectResolver
         listener.onStatusChange(new ExternalSystemTaskNotificationEvent(id, msg))
     }
 
-    def onConnect(client: SbtClient): Unit = {
-      logger.info("Retrieving structure")
+      def onConnect(client: SbtClient): Unit = {
+        logger.info("Retrieving structure")
 
-      client.handleEvents {
-        case logE : LogEvent => logE.entry match {
-          case LogStdOut(_) | LogStdErr(_) | LogMessage(_, _) =>
-            logger.info(logE.entry.message)
+        client.handleEvents {
+          case logE: LogEvent => logE.entry match {
+            case LogStdOut(_) | LogStdErr(_) | LogMessage(_, _) =>
+              logger.info(logE.entry.message)
+            case _ =>
+          }
           case _ =>
         }
-        case _ =>
-      }
 
-      val projectRef = new ProjectRef {
-        var project: Project = new StatefulProject(projectFile.getCanonicalFile.toURI, projectFile.getName)
-      }
+        val projectRef = new ProjectRef {
+          var project: Project = new StatefulProject(projectFile.getCanonicalFile.toURI, projectFile.getName)
+        }
 
-      val extractors =
-        if (isPreview)
-          Seq(new InternalDependenciesExtractor with SynchronizedContext)
-        else
-          Seq(new InternalDependenciesExtractor with SynchronizedContext,
+        val extractors =
+          if (isPreview)
+            Seq(new InternalDependenciesExtractor with SynchronizedContext)
+          else
+            Seq(new InternalDependenciesExtractor with SynchronizedContext,
               new ExternalDependenciesExtractor with SynchronizedContext,
               new ClassifiersExtractor with SynchronizedContext)
 
-      val extraction = for {
-        _ <- (new DirectoriesExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
-        _ <- Future.sequence(extractors.map(_.attach(client, projectRef, Log)._1))
-      } yield Unit
+        val extraction = for {
+          _ <- (new DirectoriesExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
+          _ <- Future.sequence(extractors.map(_.attach(client, projectRef, Log)._1))
+        } yield Unit
 
-      import DataNodeConversions._
-      extraction.onComplete {
-        case Success(_)   => projectPromise.foreach(_.trySuccess(projectRef.project.toDataNode))
-        case Failure(exc) => projectPromise.foreach(_.tryFailure(new ExternalSystemException(exc)))
+        import DataNodeConversions._
+        extraction.onComplete {
+          case Success(_)   => projectPromise.foreach(_.trySuccess(projectRef.project.toDataNode))
+          case Failure(exc) => projectPromise.foreach(_.tryFailure(new ExternalSystemException(exc)))
+        }
       }
-    }
 
     logger.info("Connecting to SBT server")
 

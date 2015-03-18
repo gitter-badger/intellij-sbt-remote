@@ -2,14 +2,14 @@ package com.dancingrobot84.sbt.remote
 package project
 package extractors
 
-import com.dancingrobot84.sbt.remote.project.structure.{ProjectRef, Project}
+import com.dancingrobot84.sbt.remote.project.structure.{ ProjectRef, Project }
 import sbt.client._
-import sbt.protocol.{MinimalBuildStructure, ProjectReference, ScopedKey}
+import sbt.protocol.{ MinimalBuildStructure, ProjectReference, ScopedKey }
 import sbt.serialization._
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.Try
 
 /**
@@ -21,9 +21,7 @@ trait Extractor {
 }
 
 trait Context {
-  def getContext
-      (client: SbtClient, logger: Logger, acceptedProjects: Vector[ProjectReference],projectRef: ProjectRef):
-      Extractor.Context
+  def getContext(client: SbtClient, logger: Logger, acceptedProjects: Vector[ProjectReference], projectRef: ProjectRef): Extractor.Context
 }
 
 abstract class ExtractorAdapter extends Extractor with Context {
@@ -36,47 +34,42 @@ abstract class ExtractorAdapter extends Extractor with Context {
 
   type WatchResult[T] = (ScopedKey, Try[T])
 
-  protected def watchSettingKey[T]
-      (key: String)(valueListener: ValueListener[T])
-      (implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context) :
-      Future[Seq[WatchResult[T]]] =
+  protected def watchSettingKey[T](key: String)(valueListener: ValueListener[T])(
+    implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context): Future[Seq[WatchResult[T]]] =
     ctx.client.lookupScopedKey(key).flatMap { allKeys =>
       Future.sequence(
         allKeys
           .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
           .map { key =>
-          val p = Promise[WatchResult[T]]()
-          addSubscription(ctx.client.watch(SettingKey[T](key)){ (key, result) =>
-            valueListener(key, result)
-            p.trySuccess((key, result))
-          })
-          p.future
-        }
+            val p = Promise[WatchResult[T]]()
+            addSubscription(ctx.client.watch(SettingKey[T](key)) { (key, result) =>
+              valueListener(key, result)
+              p.trySuccess((key, result))
+            })
+            p.future
+          }
       )
     }
 
-  protected def watchTaskKey[T]
-      (key: String)(valueListener: ValueListener[T])
-      (implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context) :
-      Future[Seq[WatchResult[T]]] =
+  protected def watchTaskKey[T](key: String)(valueListener: ValueListener[T])(
+    implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context): Future[Seq[WatchResult[T]]] =
     ctx.client.lookupScopedKey(key).flatMap { allKeys =>
       Future.sequence(
         allKeys
           .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
           .map { key =>
-          val p = Promise[WatchResult[T]]()
-          addSubscription(ctx.client.watch(SettingKey[T](key)){ (key, result) =>
-            valueListener(key, result)
-            p.trySuccess((key, result))
-          })
-          p.future
-        }
+            val p = Promise[WatchResult[T]]()
+            addSubscription(ctx.client.watch(SettingKey[T](key)) { (key, result) =>
+              valueListener(key, result)
+              p.trySuccess((key, result))
+            })
+            p.future
+          }
       )
     }
 
-  protected def ifProjectAccepted
-      (project: Option[ProjectReference])(onAccept: ProjectReference => Unit)
-      (implicit ctx: Extractor.Context): Unit =
+  protected def ifProjectAccepted(project: Option[ProjectReference])(onAccept: ProjectReference => Unit)(
+    implicit ctx: Extractor.Context): Unit =
     project.foreach { p =>
       val base = withProject(_.base)
       if (p.build == base && ctx.acceptedProjects.contains(p))
@@ -92,21 +85,22 @@ abstract class ExtractorAdapter extends Extractor with Context {
   override def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription) = {
     val initPromise = Promise[Unit]()
 
-    addSubscription(client.watchBuild { case MinimalBuildStructure(builds, allProjects) =>
-      val buildOpt = builds.find(_ == projectRef.project.base).headOption
+    addSubscription(client.watchBuild {
+      case MinimalBuildStructure(builds, allProjects) =>
+        val buildOpt = builds.find(_ == projectRef.project.base).headOption
 
-      buildOpt.map { build =>
-        val acceptedProjects = allProjects.filter { p =>
-          p.id.build == build && p.plugins.contains("sbt.plugins.JvmPlugin")
-        }.map(_.id)
+        buildOpt.map { build =>
+          val acceptedProjects = allProjects.filter { p =>
+            p.id.build == build && p.plugins.contains("sbt.plugins.JvmPlugin")
+          }.map(_.id)
 
-        if(acceptedProjects.isEmpty)
-          initPromise.failure(new Error("No suitable modules found"))
-        else
-          doAttach(getContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
-      }.getOrElse {
-        initPromise.failure(new Error("No project found"))
-      }
+          if (acceptedProjects.isEmpty)
+            initPromise.failure(new Error("No suitable modules found"))
+          else
+            doAttach(getContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
+        }.getOrElse {
+          initPromise.failure(new Error("No project found"))
+        }
     })
 
     (initPromise.future, new Subscription {
@@ -117,11 +111,10 @@ abstract class ExtractorAdapter extends Extractor with Context {
 }
 
 trait SynchronizedContext extends Context {
-  override def getContext
-      (client0: SbtClient,
-      logger0: Logger,
-      acceptedProjects0: Vector[ProjectReference],
-      projectRef0: ProjectRef) = new Extractor.Context {
+  override def getContext(client0: SbtClient,
+                          logger0: Logger,
+                          acceptedProjects0: Vector[ProjectReference],
+                          projectRef0: ProjectRef) = new Extractor.Context {
     val client = client0
     val logger = logger0
     val acceptedProjects = acceptedProjects0

@@ -9,7 +9,7 @@ import com.intellij.openapi.vfs.VirtualFile
  * @since 2/5/15.
  */
 class ProjectImportProvider(builder: ProjectImportBuilder)
-  extends AbstractExternalProjectImportProvider(builder, Id) {
+    extends AbstractExternalProjectImportProvider(builder, Id) {
 
   override def canImport(entry: VirtualFile, project: Project): Boolean =
     ImportUtil.canImportFrom(entry)

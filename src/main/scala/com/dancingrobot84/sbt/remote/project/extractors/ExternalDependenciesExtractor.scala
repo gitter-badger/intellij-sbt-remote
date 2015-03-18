@@ -6,7 +6,7 @@ import sbt.protocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 /**
  * @author: Nikolay Obedin
@@ -20,9 +20,8 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
     } yield Unit
   }
 
-  private def updateWatcher
-      (key: ScopedKey, result: Try[sbt.UpdateReport])
-      (implicit ctx: Extractor.Context): Unit = result match {
+  private def updateWatcher(key: ScopedKey, result: Try[sbt.UpdateReport])(
+    implicit ctx: Extractor.Context): Unit = result match {
     case Success(updateReport) => ifProjectAccepted(key.scope.project) { p =>
       updateReport.configurations.foreach { confReport =>
         Configuration.fromString(confReport.configuration).foreach { conf =>
@@ -34,19 +33,18 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
       logger.error(s"Failed retrieving 'update' key", exc)
   }
 
-  private def addLibraryDependency
-      (moduleId: Module.Id, moduleReport: ModuleReport, configuration: Configuration)
-      (implicit ctx: Extractor.Context): Unit = {
+  private def addLibraryDependency(moduleId: Module.Id, moduleReport: ModuleReport, configuration: Configuration)(
+    implicit ctx: Extractor.Context): Unit = {
     val libId = Library.Id.fromSbtModuleId(moduleReport.module)
     val artifacts = moduleReport.artifacts.map(af => Artifact.Binary(af._2)).toSet
     if (artifacts.isEmpty) return
 
     withProject { project =>
       project.modules.find(_.id == moduleId).foreach { module =>
-        val allLibs      = project.libraries.filter(_.id ~= libId)
-        val lastVersion  = allLibs.foldLeft(-1)(_ max _.id.internalVersion)
+        val allLibs = project.libraries.filter(_.id ~= libId)
+        val lastVersion = allLibs.foldLeft(-1)(_ max _.id.internalVersion)
         val libInProject = allLibs.find(_.binaries == artifacts)
-                                  .getOrElse(project.addLibrary(libId.copy(internalVersion = lastVersion + 1)))
+          .getOrElse(project.addLibrary(libId.copy(internalVersion = lastVersion + 1)))
         artifacts.foreach { artifact =>
           libInProject.addArtifact(artifact)
           logger.warn(s"Library '${libInProject.id}' adds '${artifact.file}' to itself")

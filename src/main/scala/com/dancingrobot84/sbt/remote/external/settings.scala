@@ -1,13 +1,12 @@
 package com.dancingrobot84.sbt.remote.external
 
-
 import com.intellij.openapi.components._
 import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutionSettings
 import com.intellij.openapi.externalSystem.service.project.PlatformFacade
-import com.intellij.openapi.externalSystem.settings.{AbstractExternalSystemLocalSettings, AbstractExternalSystemSettings, ExternalProjectSettings, ExternalSystemSettingsListener}
+import com.intellij.openapi.externalSystem.settings.{ AbstractExternalSystemLocalSettings, AbstractExternalSystemSettings, ExternalProjectSettings, ExternalSystemSettingsListener }
 import com.intellij.openapi.project.Project
 import com.intellij.util.containers.ContainerUtilRt
-import com.intellij.util.messages.{Topic => ExternalSystemTopic}
+import com.intellij.util.messages.{ Topic => ExternalSystemTopic }
 
 /**
  * @author Nikolay Obedin
@@ -19,12 +18,12 @@ import com.intellij.util.messages.{Topic => ExternalSystemTopic}
   storages = Array(
     new Storage(file = StoragePathMacros.PROJECT_FILE),
     new Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/sbt-remote.xml",
-                scheme = StorageScheme.DIRECTORY_BASED)
+      scheme = StorageScheme.DIRECTORY_BASED)
   )
 )
 final class SystemSettings(project: Project)
-  extends AbstractExternalSystemSettings[SystemSettings, ProjectSettings, ProjectSettingsListener](Topic, project)
-  with PersistentStateComponent[SystemSettings.State] {
+    extends AbstractExternalSystemSettings[SystemSettings, ProjectSettings, ProjectSettingsListener](Topic, project)
+    with PersistentStateComponent[SystemSettings.State] {
 
   def checkSettings(old: ProjectSettings, current: ProjectSettings): Unit = {}
 
@@ -46,7 +45,7 @@ object SystemSettings {
   def apply(project: Project) = ServiceManager.getService(project, classOf[SystemSettings])
 
   final class State
-    extends AbstractExternalSystemSettings.State[ProjectSettings] {
+      extends AbstractExternalSystemSettings.State[ProjectSettings] {
 
     private val projectSettings = ContainerUtilRt.newTreeSet[ProjectSettings]()
 
@@ -59,7 +58,7 @@ object SystemSettings {
 }
 
 final class ProjectSettings
-  extends ExternalProjectSettings {
+    extends ExternalProjectSettings {
 
   override def clone(): ExternalProjectSettings = {
     val s = new ProjectSettings
@@ -79,8 +78,8 @@ object ProjectSettings {
   )
 )
 final class LocalSettings(project: Project, platformFacade: PlatformFacade)
-  extends AbstractExternalSystemLocalSettings(Id, project, platformFacade)
-  with PersistentStateComponent[LocalSettings.State] {
+    extends AbstractExternalSystemLocalSettings(Id, project, platformFacade)
+    with PersistentStateComponent[LocalSettings.State] {
 
   def getState = {
     val s = new LocalSettings.State

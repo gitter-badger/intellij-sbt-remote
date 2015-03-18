@@ -9,7 +9,7 @@ import sbt.serialization._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 /**
  * @author: Nikolay Obedin
@@ -33,9 +33,7 @@ abstract class DirectoriesExtractor extends ExtractorAdapter {
       _ <- watchSettingKey[File]("test:classDirectory")(pathWatcher(Path.TestOutput))
     } yield Unit
 
-  private def baseDirWatcher
-      (key: ScopedKey, result: Try[File])
-      (implicit ctx: Extractor.Context): Unit = result match {
+  private def baseDirWatcher(key: ScopedKey, result: Try[File])(implicit ctx: Extractor.Context): Unit = result match {
     case Success(baseDir) => ifProjectAccepted(key.scope.project) { p =>
       withProject { project =>
         project.addModule(p.name, baseDir)
@@ -48,9 +46,7 @@ abstract class DirectoriesExtractor extends ExtractorAdapter {
       logger.error("Failed retrieving 'baseDirectory' key", exc)
   }
 
-  private def nameWatcher
-      (key: ScopedKey, result: Try[String])
-      (implicit ctx: Extractor.Context): Unit = result match {
+  private def nameWatcher(key: ScopedKey, result: Try[String])(implicit ctx: Extractor.Context): Unit = result match {
     case Success(name) => ifProjectAccepted(key.scope.project) { p =>
       withProject { project =>
         project.modules.find(_.id == p.name).foreach { module =>
@@ -65,9 +61,8 @@ abstract class DirectoriesExtractor extends ExtractorAdapter {
       logger.error("Failed retrieving 'name' key", exc)
   }
 
-  private def pathsWatcher
-      (pathTrans: File => Path)(key: ScopedKey, result: Try[Seq[File]])
-      (implicit ctx: Extractor.Context): Unit = result match {
+  private def pathsWatcher(pathTrans: File => Path)(key: ScopedKey, result: Try[Seq[File]])(
+    implicit ctx: Extractor.Context): Unit = result match {
     case Success(paths) => ifProjectAccepted(key.scope.project) { p =>
       paths.foreach { path =>
         withProject { project =>
@@ -80,9 +75,8 @@ abstract class DirectoriesExtractor extends ExtractorAdapter {
       logger.error(s"Failed retrieving '$key' key", exc)
   }
 
-  private def pathWatcher
-      (pathTrans: File => Path)(key: ScopedKey, result: Try[File])
-      (implicit ctx: Extractor.Context): Unit = result match {
+  private def pathWatcher(pathTrans: File => Path)(key: ScopedKey, result: Try[File])(
+    implicit ctx: Extractor.Context): Unit = result match {
     case Success(path) => ifProjectAccepted(key.scope.project) { p =>
       logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
       withProject { project =>

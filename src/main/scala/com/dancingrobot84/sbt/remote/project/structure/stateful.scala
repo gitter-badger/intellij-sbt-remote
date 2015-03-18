@@ -6,18 +6,17 @@ import java.io.File
 import java.net.URI
 
 import com.intellij.openapi.externalSystem.model.project._
-import com.intellij.openapi.externalSystem.model.{DataNode, ProjectKeys}
+import com.intellij.openapi.externalSystem.model.{ DataNode, ProjectKeys }
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.roots.DependencyScope
 import scala.collection.mutable
-
 
 /**
  * @author: Nikolay Obedin
  * @since: 2/20/15.
  */
 class StatefulProject(val base: URI, var name: String) extends Project with Cloneable {
-  private val modules0   = mutable.Set.empty[StatefulModule]
+  private val modules0 = mutable.Set.empty[StatefulModule]
   private val libraries0 = mutable.Set.empty[StatefulLibrary]
 
   def addModule(id: Module.Id, base: File) =
@@ -48,7 +47,7 @@ class StatefulProject(val base: URI, var name: String) extends Project with Clon
 }
 
 class StatefulModule(val base: File, val id: Module.Id, var name: String) extends Module {
-  private val paths0        = mutable.Set.empty[Path]
+  private val paths0 = mutable.Set.empty[Path]
   private val dependencies0 = mutable.Set.empty[Dependency]
 
   def addPath(path: Path) =

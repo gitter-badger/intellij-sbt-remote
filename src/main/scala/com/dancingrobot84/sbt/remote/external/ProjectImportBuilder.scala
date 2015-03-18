@@ -15,7 +15,7 @@ import com.intellij.openapi.project.Project
  * @since 2/5/15.
  */
 class ProjectImportBuilder(projectDataManager: ProjectDataManager)
-  extends AbstractExternalProjectImportBuilder[ImportControl](projectDataManager, new ImportControl, Id) {
+    extends AbstractExternalProjectImportBuilder[ImportControl](projectDataManager, new ImportControl, Id) {
 
   def getName = Bundle("sbt.remote.name")
 

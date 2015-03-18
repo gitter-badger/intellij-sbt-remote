@@ -35,8 +35,8 @@ object Logger {
 
   object Level {
     object Debug extends Level
-    object Info  extends Level
-    object Warn  extends Level
+    object Info extends Level
+    object Warn extends Level
     object Error extends Level
   }
 
@@ -45,7 +45,7 @@ object Logger {
       case Level.Info  => logger.info(message, cause.orNull)
       case Level.Warn  => logger.warn(message, cause.orNull)
       case Level.Error => logger.error(message, cause.orNull)
-      case _ => logger.debug(message, cause.orNull)
+      case _           => logger.debug(message, cause.orNull)
     }
   }
 }
