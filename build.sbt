@@ -7,7 +7,7 @@ val commonSettings = Seq(
   scalaVersion := "2.10.4",
   javacOptions ++= Seq("-source 1.6", "-target 1.6"),
   scalacOptions ++= Seq("-target:jvm-1.6", "-deprecation", "-feature"),
-  ideaVersion := "14.0.3",
+  ideaBuild := "139.1117.1",
   assemblyExcludedJars in assembly <<= ideaFullJars
 )
 
