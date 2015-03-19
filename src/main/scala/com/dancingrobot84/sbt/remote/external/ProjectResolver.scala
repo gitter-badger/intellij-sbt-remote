@@ -27,11 +27,11 @@ class ProjectResolver
   private var projectPromise: Option[Promise[DataNode[ProjectData]]] = None
   private var connector: Option[SbtConnector] = None
 
-  def resolveProjectInfo(id: ExternalSystemTaskId,
-                         projectPath: String,
-                         isPreview: Boolean,
-                         settings: ExecutionSettings,
-                         listener: ExternalSystemTaskNotificationListener): DataNode[ProjectData] = {
+  override def resolveProjectInfo(id: ExternalSystemTaskId,
+                                  projectPath: String,
+                                  isPreview: Boolean,
+                                  settings: ExecutionSettings,
+                                  listener: ExternalSystemTaskNotificationListener): DataNode[ProjectData] = {
     val projectFile = new File(projectPath)
     connector = Some(sbtConnectorFor(projectFile))
     projectPromise = Some(Promise())
@@ -92,8 +92,8 @@ class ProjectResolver
     projectPromise.map(p => Await.result(p.future, Duration.Inf)).getOrElse(null)
   }
 
-  def cancelTask(id: ExternalSystemTaskId,
-                 listener: ExternalSystemTaskNotificationListener) = {
+  override def cancelTask(id: ExternalSystemTaskId,
+                          listener: ExternalSystemTaskNotificationListener) = {
     projectPromise.foreach(_.tryFailure(new IllegalStateException("Import cancelled")))
     connector.foreach(_.close())
     projectPromise.map(_.isCompleted).getOrElse(true)

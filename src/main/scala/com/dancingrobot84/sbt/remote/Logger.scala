@@ -41,7 +41,7 @@ object Logger {
   }
 
   implicit def ideaLogger2Logger(logger: diagnostic.Logger): Logger = new Logger {
-    def log(message: String, level: Logger.Level, cause: Option[Throwable]): Unit = level match {
+    override def log(message: String, level: Logger.Level, cause: Option[Throwable]): Unit = level match {
       case Level.Info  => logger.info(message, cause.orNull)
       case Level.Warn  => logger.warn(message, cause.orNull)
       case Level.Error => logger.error(message, cause.orNull)

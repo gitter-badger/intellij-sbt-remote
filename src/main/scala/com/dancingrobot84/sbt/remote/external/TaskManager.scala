@@ -10,16 +10,16 @@ import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 class TaskManager
     extends ExternalSystemTaskManager[ExecutionSettings] {
 
-  def executeTasks(id: ExternalSystemTaskId,
-                   taskNames: java.util.List[String],
-                   projectPath: String,
-                   settings: ExecutionSettings,
-                   vmOptions: java.util.List[String],
-                   scriptParameters: java.util.List[String],
-                   debuggerSetup: String,
-                   listener: ExternalSystemTaskNotificationListener) = {}
+  override def executeTasks(id: ExternalSystemTaskId,
+                            taskNames: java.util.List[String],
+                            projectPath: String,
+                            settings: ExecutionSettings,
+                            vmOptions: java.util.List[String],
+                            scriptParameters: java.util.List[String],
+                            debuggerSetup: String,
+                            listener: ExternalSystemTaskNotificationListener) = {}
 
-  def cancelTask(id: ExternalSystemTaskId,
-                 listener: ExternalSystemTaskNotificationListener) = false
+  override def cancelTask(id: ExternalSystemTaskId,
+                          listener: ExternalSystemTaskNotificationListener) = false
 
 }

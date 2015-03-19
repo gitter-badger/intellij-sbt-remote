@@ -12,9 +12,11 @@ class ImportControl
     extends AbstractImportFromExternalSystemControl[ProjectSettings, ProjectSettingsListener, SystemSettings](
       Id, SystemSettings(ProjectManager.getInstance().getDefaultProject), ProjectSettings()) {
 
-  def onLinkedProjectPathChange(newPath: String): Unit = {}
+  override def onLinkedProjectPathChange(newPath: String): Unit = {}
 
-  def createProjectSettingsControl(settings: ProjectSettings) = new controls.ProjectSettingsControl(settings)
+  override def createProjectSettingsControl(settings: ProjectSettings) =
+    new controls.ProjectSettingsControl(settings)
 
-  def createSystemSettingsControl(settings: SystemSettings) = new controls.SystemSettingsControl(settings)
+  override def createSystemSettingsControl(settings: SystemSettings) =
+    new controls.SystemSettingsControl(settings)
 }

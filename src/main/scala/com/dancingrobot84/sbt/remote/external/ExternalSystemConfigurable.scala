@@ -11,13 +11,15 @@ import com.intellij.openapi.{ project => idea }
 class ExternalSystemConfigurable(project: idea.Project)
     extends AbstractExternalSystemConfigurable[ProjectSettings, ProjectSettingsListener, SystemSettings](project, Id) {
 
-  def createProjectSettingsControl(settings: ProjectSettings) = new controls.ProjectSettingsControl(settings)
+  override def createProjectSettingsControl(settings: ProjectSettings) =
+    new controls.ProjectSettingsControl(settings)
 
-  def createSystemSettingsControl(settings: SystemSettings) = new controls.SystemSettingsControl(settings)
+  override def createSystemSettingsControl(settings: SystemSettings) =
+    new controls.SystemSettingsControl(settings)
 
-  def newProjectSettings() = ProjectSettings()
+  override def newProjectSettings() = ProjectSettings()
 
-  def getId = "sbt.remote.project.settings.configurable"
+  override def getId = "sbt.remote.project.settings.configurable"
 
-  def getHelpTopic = null
+  override def getHelpTopic = null
 }

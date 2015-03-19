@@ -17,16 +17,16 @@ import com.intellij.openapi.project.Project
 class ProjectImportBuilder(projectDataManager: ProjectDataManager)
     extends AbstractExternalProjectImportBuilder[ImportControl](projectDataManager, new ImportControl, Id) {
 
-  def getName = Bundle("sbt.remote.name")
+  override def getName = Bundle("sbt.remote.name")
 
-  def getIcon = Bundle("sbt.remote.icon")
+  override def getIcon = Bundle("sbt.remote.icon")
 
-  def doPrepare(context: WizardContext): Unit = {}
+  override def doPrepare(context: WizardContext): Unit = {}
 
-  def beforeCommit(dataNode: DataNode[ProjectData], project: Project): Unit = {}
+  override def beforeCommit(dataNode: DataNode[ProjectData], project: Project): Unit = {}
 
-  def getExternalProjectConfigToUse(file: File): File = file
+  override def getExternalProjectConfigToUse(file: File): File = file
 
-  def applyExtraSettings(context: WizardContext): Unit = {}
+  override def applyExtraSettings(context: WizardContext): Unit = {}
 
 }

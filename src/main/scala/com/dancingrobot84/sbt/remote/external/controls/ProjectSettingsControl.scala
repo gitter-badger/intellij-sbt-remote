@@ -44,5 +44,5 @@ class ProjectSettingsControl(initialSettings: ProjectSettings)
     settings.resolveSbtClassifiers = resolveSbtClassifiersCheckBox.isSelected
   }
 
-  def validate(sbtProjectSettings: ProjectSettings) = true
+  override def validate(sbtProjectSettings: ProjectSettings) = true
 }

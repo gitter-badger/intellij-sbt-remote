@@ -115,10 +115,10 @@ trait SynchronizedContext extends Context {
                           logger0: Logger,
                           acceptedProjects0: Vector[ProjectReference],
                           projectRef0: ProjectRef) = new Extractor.Context {
-    val client = client0
-    val logger = logger0
-    val acceptedProjects = acceptedProjects0
-    def withProject[T](trans: Project => T): T = projectRef0.synchronized {
+    override val client = client0
+    override val logger = logger0
+    override val acceptedProjects = acceptedProjects0
+    override def withProject[T](trans: Project => T): T = projectRef0.synchronized {
       val result = trans(projectRef0.project)
       projectRef0.project = projectRef0.project.copy
       result

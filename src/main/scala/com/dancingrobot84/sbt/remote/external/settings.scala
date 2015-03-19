@@ -27,19 +27,22 @@ final class SystemSettings(project: Project)
     extends AbstractExternalSystemSettings[SystemSettings, ProjectSettings, ProjectSettingsListener](Topic, project)
     with PersistentStateComponent[SystemSettings.State] {
 
-  def checkSettings(old: ProjectSettings, current: ProjectSettings): Unit = {}
+  override def checkSettings(old: ProjectSettings, current: ProjectSettings): Unit = {}
 
-  def subscribe(listener: ExternalSystemSettingsListener[ProjectSettings]): Unit = {}
+  override def subscribe(listener: ExternalSystemSettingsListener[ProjectSettings]): Unit = {
+    val adapter = new DelegatingExternalSystemSettingsListener[ProjectSettings](listener) with ProjectSettingsListener
+    getProject.getMessageBus.connect(getProject).subscribe(Topic, adapter)
+  }
 
-  def copyExtraSettingsFrom(settings: SystemSettings): Unit = {}
+  override def copyExtraSettingsFrom(settings: SystemSettings): Unit = {}
 
-  def getState = {
+  override def getState = {
     val s = new SystemSettings.State
     fillState(s)
     s
   }
 
-  def loadState(state: SystemSettings.State): Unit =
+  override def loadState(state: SystemSettings.State): Unit =
     super[AbstractExternalSystemSettings].loadState(state)
 }
 
@@ -61,10 +64,8 @@ object SystemSettings {
 }
 
 final class ProjectSettings(
-  @BeanProperty
-  var resolveClassifiers: Boolean,
-  @BeanProperty
-  var resolveSbtClassifiers: Boolean)
+  @BeanProperty var resolveClassifiers: Boolean,
+  @BeanProperty var resolveSbtClassifiers: Boolean)
     extends ExternalProjectSettings {
 
   def this() {
@@ -92,13 +93,13 @@ final class LocalSettings(project: Project, platformFacade: PlatformFacade)
     extends AbstractExternalSystemLocalSettings(Id, project, platformFacade)
     with PersistentStateComponent[LocalSettings.State] {
 
-  def getState = {
+  override def getState = {
     val s = new LocalSettings.State
     fillState(s)
     s
   }
 
-  def loadState(state: LocalSettings.State): Unit =
+  override def loadState(state: LocalSettings.State): Unit =
     super[AbstractExternalSystemLocalSettings].loadState(state)
 }
 
@@ -117,4 +118,4 @@ final class ExecutionSettings(
 trait ProjectSettingsListener
   extends ExternalSystemSettingsListener[ProjectSettings]
 
-object Topic extends ExternalSystemTopic[ProjectSettingsListener]("", classOf[ProjectSettingsListener])
+object Topic extends ExternalSystemTopic[ProjectSettingsListener]("SBT Remote", classOf[ProjectSettingsListener])
