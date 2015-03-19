@@ -3,8 +3,9 @@ package com.dancingrobot84.sbt.remote.external
 import com.intellij.openapi.components._
 import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutionSettings
 import com.intellij.openapi.externalSystem.service.project.PlatformFacade
-import com.intellij.openapi.externalSystem.settings.{ AbstractExternalSystemLocalSettings, AbstractExternalSystemSettings, ExternalProjectSettings, ExternalSystemSettingsListener }
+import com.intellij.openapi.externalSystem.settings._
 import com.intellij.openapi.project.Project
+import com.intellij.util.xmlb.annotations.AbstractCollection
 import scala.beans.BeanProperty
 import com.intellij.util.containers.ContainerUtilRt
 import com.intellij.util.messages.{ Topic => ExternalSystemTopic }
@@ -50,18 +51,25 @@ object SystemSettings {
 
     private val projectSettings = ContainerUtilRt.newTreeSet[ProjectSettings]()
 
-    def getLinkedExternalProjectsSettings: java.util.Set[ProjectSettings] =
+    @AbstractCollection(surroundWithTag = false, elementTypes = Array(classOf[ProjectSettings]))
+    override def getLinkedExternalProjectsSettings: java.util.Set[ProjectSettings] =
       projectSettings
 
-    def setLinkedExternalProjectsSettings(settings: java.util.Set[ProjectSettings]): Unit =
+    override def setLinkedExternalProjectsSettings(settings: java.util.Set[ProjectSettings]): Unit =
       Option(settings).foreach(projectSettings.addAll)
   }
 }
 
 final class ProjectSettings(
+  @BeanProperty
   var resolveClassifiers: Boolean,
+  @BeanProperty
   var resolveSbtClassifiers: Boolean)
     extends ExternalProjectSettings {
+
+  def this() {
+    this(false, false)
+  }
 
   override def clone(): ExternalProjectSettings = {
     val result = new ProjectSettings(resolveClassifiers, resolveSbtClassifiers)
@@ -71,7 +79,7 @@ final class ProjectSettings(
 }
 
 object ProjectSettings {
-  def apply() = new ProjectSettings(false, false)
+  def apply() = new ProjectSettings
 }
 
 @State(
