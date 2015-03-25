@@ -5,10 +5,6 @@ package structure
 import java.io.File
 import java.net.URI
 
-import com.intellij.openapi.externalSystem.model.project._
-import com.intellij.openapi.externalSystem.model.{ DataNode, ProjectKeys }
-import com.intellij.openapi.module.StdModuleTypes
-import com.intellij.openapi.roots.DependencyScope
 import scala.collection.mutable
 
 /**
