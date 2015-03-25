@@ -2,7 +2,6 @@
   <artifact build-on-make="true" name="intellij-sbt-remote">
     <output-path>$PROJECT_DIR$/target/artifact/</output-path>
     <root id="root">
-      <element id="module-output" name="intellij-sbt-remote" />
       <element id="directory" name="lib">
         <element id="library" level="project" name="SBT: com.thoughtworks.paranamer:paranamer:2.6:jar" />
         <element id="library" level="project" name="SBT: com.typesafe.sbtrc:client-2-11:1.0-37163c266936173d582a90113a59c729872665e0:jar" />
@@ -23,6 +22,7 @@
         <element id="library" level="project" name="SBT: org.spire-math:jawn-parser_2.11:0.6.0:jar" />
         <element id="library" level="project" name="SBT: org.spire-math:json4s-support_2.11:0.6.0:jar" />
       </element>
+      <element id="module-output" name="root" />
     </root>
   </artifact>
 </component>
