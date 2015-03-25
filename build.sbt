@@ -1,5 +1,15 @@
 import scalariform.formatter.preferences._
 
+val scalacOpts = Seq(
+  "-target:jvm-1.6",
+  "-encoding", "UTF-8",
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-Xfatal-warnings",
+  "-Xlint"
+)
+
 lazy val root = project.in(file("."))
   .settings(ideaPluginSettings:_*)
   .settings(scalariformSettings:_*)
@@ -9,7 +19,7 @@ lazy val root = project.in(file("."))
     version := "0.0.1",
     scalaVersion := "2.11.5",
     javacOptions ++= Seq("-source 1.6", "-target 1.6"),
-    scalacOptions ++= Seq("-target:jvm-1.6", "-deprecation", "-feature"),
+    scalacOptions ++= scalacOpts,
     ideaBuild := "141.177.4",
     assemblyExcludedJars in assembly <<= ideaFullJars,
     libraryDependencies ++= Seq(
