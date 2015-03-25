@@ -36,37 +36,36 @@ abstract class ExtractorAdapter extends Extractor with Context {
 
   protected def watchSettingKey[T](key: String)(valueListener: ValueListener[T])(
     implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context): Future[Seq[WatchResult[T]]] =
-    ctx.client.lookupScopedKey(key).flatMap { allKeys =>
-      Future.sequence(
-        allKeys
-          .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
-          .map { key =>
-            val p = Promise[WatchResult[T]]()
-            addSubscription(ctx.client.watch(SettingKey[T](key)) { (key, result) =>
-              valueListener(key, result)
-              p.trySuccess((key, result))
-            })
-            p.future
-          }
-      )
+    doWatch(key) { scopedKey =>
+      val p = Promise[WatchResult[T]]()
+      addSubscription(ctx.client.watch(TaskKey[T](scopedKey)) { (key, result) =>
+        valueListener(key, result)
+        p.trySuccess((key, result))
+      })
+      p.future
     }
 
   protected def watchTaskKey[T](key: String)(valueListener: ValueListener[T])(
     implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context): Future[Seq[WatchResult[T]]] =
-    ctx.client.lookupScopedKey(key).flatMap { allKeys =>
-      Future.sequence(
-        allKeys
-          .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
-          .map { key =>
-            val p = Promise[WatchResult[T]]()
-            addSubscription(ctx.client.watch(SettingKey[T](key)) { (key, result) =>
-              valueListener(key, result)
-              p.trySuccess((key, result))
-            })
-            p.future
-          }
-      )
+    doWatch(key) { scopedKey =>
+      val p = Promise[WatchResult[T]]()
+      addSubscription(ctx.client.watch(TaskKey[T](scopedKey)) { (key, result) =>
+        valueListener(key, result)
+        p.trySuccess((key, result))
+      })
+      p.future
     }
+
+  private def doWatch[T](key: String)(keyProcessor: ScopedKey => Future[WatchResult[T]])(
+    implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context): Future[Seq[WatchResult[T]]] = {
+    val allProjectKeys = ctx.acceptedProjects.map(pr => s"${pr.name}/$key")
+    for {
+      allKeys <- Future.traverse(allProjectKeys)(ctx.client.lookupScopedKey).map(_.flatten.toSeq)
+      results <- Future.sequence(allKeys
+                  .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
+                  .map(keyProcessor))
+    } yield results
+  }
 
   protected def ifProjectAccepted(project: Option[ProjectReference])(onAccept: ProjectReference => Unit)(
     implicit ctx: Extractor.Context): Unit =
