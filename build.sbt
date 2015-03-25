@@ -4,7 +4,7 @@ val commonSettings = Seq(
   name := "intellij-sbt-remote",
   organization := "com.dancingrobot84",
   version := "0.0.1",
-  scalaVersion := "2.10.4",
+  scalaVersion := "2.11.5",
   javacOptions ++= Seq("-source 1.6", "-target 1.6"),
   scalacOptions ++= Seq("-target:jvm-1.6", "-deprecation", "-feature"),
   ideaBuild := "139.1117.1",
@@ -13,14 +13,8 @@ val commonSettings = Seq(
 
 ideaPluginSettings ++ commonSettings ++ scalariformSettings
 
-val versions = new {
-  val sbt = "0.13.8-RC1"
-  val sbtRemoteClient = "1.0-0c4f8149883708a2647e535b34c8d36806927791"
-}
-
 libraryDependencies ++= Seq(
-  "com.typesafe.sbtrc" % "client-2-10" % versions.sbtRemoteClient,
-  "org.scala-sbt" % "ivy" % versions.sbt
+  "com.typesafe.sbtrc" % "client-2-11" % "1.0-37163c266936173d582a90113a59c729872665e0"
 )
 
 ScalariformKeys.preferences := ScalariformKeys.preferences.value

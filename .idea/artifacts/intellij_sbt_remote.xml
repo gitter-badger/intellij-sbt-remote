@@ -5,29 +5,23 @@
       <element id="module-output" name="intellij-sbt-remote" />
       <element id="directory" name="lib">
         <element id="library" level="project" name="SBT: com.thoughtworks.paranamer:paranamer:2.6:jar" />
+        <element id="library" level="project" name="SBT: com.typesafe.sbtrc:client-2-11:1.0-37163c266936173d582a90113a59c729872665e0:jar" />
+        <element id="library" level="project" name="SBT: org.json4s:json4s-ast_2.11:3.2.10:jar" />
+        <element id="library" level="project" name="SBT: org.json4s:json4s-core_2.11:3.2.10:jar" />
+        <element id="library" level="project" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.2:jar" />
+        <element id="library" level="project" name="SBT: org.scala-lang.modules:scala-pickling_2.11:0.10.0:jar" />
+        <element id="library" level="project" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.2:jar" />
+        <element id="library" level="project" name="SBT: org.scala-lang:scala-compiler:2.11.4:jar" />
+        <element id="library" level="project" name="SBT: org.scala-lang:scala-library:2.11.5:jar" />
+        <element id="library" level="project" name="SBT: org.scala-lang:scala-reflect:2.11.5:jar" />
+        <element id="library" level="project" name="SBT: org.scala-sbt:collections_2.11:0.13.8-RC1:jar" />
+        <element id="library" level="project" name="SBT: org.scala-sbt:control_2.11:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:interface:0.13.8-RC1:jar" />
+        <element id="library" level="project" name="SBT: org.scala-sbt:io_2.11:0.13.8-RC1:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:launcher-interface:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: com.jcraft:jsch:0.1.46:jar" />
-        <element id="library" level="project" name="SBT: jline:jline:2.11:jar" />
-        <element id="library" level="project" name="SBT: org.json4s:json4s-ast_2.10:3.2.10:jar" />
-        <element id="library" level="project" name="SBT: org.json4s:json4s-core_2.10:3.2.10:jar" />
-        <element id="library" level="project" name="SBT: org.scala-lang.modules:scala-pickling_2.10:0.10.0:jar" />
-        <element id="library" level="project" name="SBT: org.scala-lang:scala-compiler:2.10.4:jar" />
-        <element id="library" level="project" name="SBT: org.scala-lang:scala-library:2.10.4:jar" />
-        <element id="library" level="project" name="SBT: org.scala-lang:scala-reflect:2.10.4:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt.ivy:ivy:2.3.0-sbt-fccfbd44c9f64523b61398a0155784dcbaeae28f:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:collections:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:control:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:cross:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:io:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:ivy:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:logging:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:process:0.13.8-RC1:jar" />
-        <element id="library" level="project" name="SBT: org.scalamacros:quasiquotes_2.10:2.0.1:jar" />
-        <element id="library" level="project" name="SBT: org.spire-math:jawn-parser_2.10:0.6.0:jar" />
-        <element id="library" level="project" name="SBT: org.spire-math:json4s-support_2.10:0.6.0:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:serialization_2.10:0.1.1:jar" />
-        <element id="library" level="project" name="SBT: com.typesafe.sbtrc:client-2-10:1.0-0c4f8149883708a2647e535b34c8d36806927791:jar" />
+        <element id="library" level="project" name="SBT: org.scala-sbt:serialization_2.11:0.1.1:jar" />
+        <element id="library" level="project" name="SBT: org.spire-math:jawn-parser_2.11:0.6.0:jar" />
+        <element id="library" level="project" name="SBT: org.spire-math:json4s-support_2.11:0.6.0:jar" />
       </element>
     </root>
   </artifact>

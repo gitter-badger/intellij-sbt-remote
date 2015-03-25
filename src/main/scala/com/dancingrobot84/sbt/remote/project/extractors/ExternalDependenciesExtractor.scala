@@ -1,7 +1,6 @@
 package com.dancingrobot84.sbt.remote.project.extractors
 
 import com.dancingrobot84.sbt.remote.project.structure._
-import sbt.ModuleReport
 import sbt.protocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,7 +32,7 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
       logger.error(s"Failed retrieving 'update' key", exc)
   }
 
-  private def addLibraryDependency(moduleId: Module.Id, moduleReport: ModuleReport, configuration: Configuration)(
+  private def addLibraryDependency(moduleId: Module.Id, moduleReport: sbt.ModuleReport, configuration: Configuration)(
     implicit ctx: Extractor.Context): Unit = {
     val libId = Library.Id.fromSbtModuleId(moduleReport.module)
     val artifacts = moduleReport.artifacts.map(af => Artifact.Binary(af._2)).toSet

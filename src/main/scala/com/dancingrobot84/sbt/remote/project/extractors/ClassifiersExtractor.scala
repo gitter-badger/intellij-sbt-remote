@@ -3,7 +3,6 @@ package com.dancingrobot84.sbt.remote.project.extractors
 import java.io.File
 
 import com.dancingrobot84.sbt.remote.project.structure._
-import sbt.ModuleReport
 import sbt.protocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,7 +30,7 @@ abstract class ClassifiersExtractor extends ExtractorAdapter {
       logger.error(s"Failed retrieving 'updateClassifiers' key", exc)
   }
 
-  private def addSources(moduleId: Module.Id, moduleReport: ModuleReport)(
+  private def addSources(moduleId: Module.Id, moduleReport: sbt.ModuleReport)(
     implicit ctx: Extractor.Context): Unit = {
     val libId = Library.Id.fromSbtModuleId(moduleReport.module)
     val artifacts = {
