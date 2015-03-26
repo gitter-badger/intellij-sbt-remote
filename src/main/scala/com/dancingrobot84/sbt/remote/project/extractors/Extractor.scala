@@ -62,8 +62,8 @@ abstract class ExtractorAdapter extends Extractor with Context {
     for {
       allKeys <- Future.traverse(allProjectKeys)(ctx.client.lookupScopedKey).map(_.flatten.toSeq)
       results <- Future.sequence(allKeys
-                  .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
-                  .map(keyProcessor))
+        .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
+        .map(keyProcessor))
     } yield results
   }
 
