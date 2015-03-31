@@ -29,7 +29,7 @@ public class TaskRunConfigurationForm {
     private ExternalProjectPathField myExternalProjectPathField;
     private JPanel myMainPanel;
     private JPanel myTasksPanel;
-    private JCheckBox myRunInGlobalProjectCheckBox;
+    private JCheckBox myRunAsIsCheckBox;
     private JList myTasksList;
     private Project myProject;
     private CollectionListModel<String> myTasksModel = new CollectionListModel<String>();
@@ -91,12 +91,12 @@ public class TaskRunConfigurationForm {
         myExternalProjectPathField.setText(path);
     }
 
-    public Boolean getRunInGlobalScope() {
-        return myRunInGlobalProjectCheckBox.isSelected();
+    public Boolean shouldRunAsIs() {
+        return myRunAsIsCheckBox.isSelected();
     }
 
-    public void setRunInGlobalScope(Boolean value) {
-        myRunInGlobalProjectCheckBox.setSelected(value);
+    public void setShouldRunAsIs(Boolean value) {
+        myRunAsIsCheckBox.setSelected(value);
     }
 
     /**
@@ -120,9 +120,9 @@ public class TaskRunConfigurationForm {
         this.$$$loadLabelText$$$(label2, ResourceBundle.getBundle("com/dancingrobot84/sbt/remote/Bundle").getString("sbt.remote.task.tasks"));
         myMainPanel.add(label2, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         myMainPanel.add(myTasksPanel, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        myRunInGlobalProjectCheckBox = new JCheckBox();
-        this.$$$loadButtonText$$$(myRunInGlobalProjectCheckBox, ResourceBundle.getBundle("com/dancingrobot84/sbt/remote/Bundle").getString("sbt.remote.task.runInGlobalScope"));
-        myMainPanel.add(myRunInGlobalProjectCheckBox, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        myRunAsIsCheckBox = new JCheckBox();
+        this.$$$loadButtonText$$$(myRunAsIsCheckBox, ResourceBundle.getBundle("com/dancingrobot84/sbt/remote/Bundle").getString("sbt.remote.task.runAsIs"));
+        myMainPanel.add(myRunAsIsCheckBox, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

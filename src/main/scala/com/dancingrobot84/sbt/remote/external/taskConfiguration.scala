@@ -47,14 +47,14 @@ class TaskRunConfigurationEditor(project: Project) extends SettingsEditor[Extern
   override def resetEditorFrom(s: ExternalSystemRunConfiguration): Unit = {
     editorForm.setProjectPath(s.getSettings.getExternalProjectPath)
     editorForm.setTasks(s.getSettings.getTaskNames)
-    editorForm.setRunInGlobalScope(s.getSettings.getScriptParameters.contains("global"))
+    editorForm.setShouldRunAsIs(Option(s.getSettings.getScriptParameters).fold(false)(_.contains("as-is")))
   }
 
   override def applyEditorTo(s: ExternalSystemRunConfiguration): Unit = {
     s.getSettings.setExternalProjectPath(editorForm.getProjectPath);
     s.getSettings.setTaskNames(editorForm.getTasks)
-    if (editorForm.getRunInGlobalScope)
-      s.getSettings.setScriptParameters("global")
+    if (editorForm.shouldRunAsIs)
+      s.getSettings.setScriptParameters("as-is")
     else
       s.getSettings.setScriptParameters("")
 
