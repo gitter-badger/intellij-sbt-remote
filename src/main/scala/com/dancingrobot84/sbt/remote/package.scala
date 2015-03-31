@@ -20,6 +20,6 @@ package object remote {
   implicit def string2icon(resourcePath: String): Icon =
     IconLoader.getIcon(resourcePath)
 
-  def sbtConnectorFor(path: File): SbtConnector =
-    SbtConnector("idea", "Intellij IDEA", path)
+  def sbtConnectorFor(path: String): SbtConnector =
+    SbtConnector("idea", "Intellij IDEA", new File(path))
 }

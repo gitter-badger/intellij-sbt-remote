@@ -32,8 +32,7 @@ class ProjectResolver
                                   isPreview: Boolean,
                                   settings: ExecutionSettings,
                                   listener: ExternalSystemTaskNotificationListener): DataNode[ProjectData] = {
-    val projectFile = new File(projectPath)
-    connector = Some(sbtConnectorFor(projectFile))
+    connector = Some(sbtConnectorFor(projectPath))
     projectPromise = Some(Promise())
 
     val logger = new Logger {
@@ -53,6 +52,7 @@ class ProjectResolver
           case _ =>
         }
 
+        val projectFile = new File(projectPath)
         val projectRef = new ProjectRef {
           var project: Project = new StatefulProject(projectFile.getCanonicalFile.toURI, projectFile.getName)
         }
