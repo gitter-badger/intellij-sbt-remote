@@ -11,6 +11,7 @@ import com.intellij.CommonBundle
  */
 object Bundle {
   def apply(key: String, params: AnyRef*) = CommonBundle.message(get(), key, params: _*)
+  def apply(key: String) = CommonBundle.message(get(), key)
 
   private var ourBundle: Reference[ResourceBundle] = null
   private val BUNDLE = "com.dancingrobot84.sbt.remote.Bundle"
