@@ -5,6 +5,7 @@ import java.io.File
 import com.dancingrobot84.sbt.remote.external
 import com.dancingrobot84.sbt.remote.project.structure._
 import com.intellij.openapi.externalSystem.model.project._
+import com.intellij.openapi.externalSystem.model.task.TaskData
 import com.intellij.openapi.externalSystem.model.{ DataNode, ProjectKeys }
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.roots.DependencyScope
@@ -41,14 +42,16 @@ object DataNodeConversions {
 
   implicit class DataNodeModule(module: Module) {
     def toDataNode(parent: DataNode[ProjectData]): DataNode[ModuleData] = {
-      val ideModulePath = parent.getData(ProjectKeys.PROJECT)
+      val ideModulePath = parent.getData
         .getIdeProjectFileDirectoryPath + "/.idea/modules"
       val moduleData = new ModuleData(
         module.id, external.Id, StdModuleTypes.JAVA.getId,
-        module.name, ideModulePath, module.base.getAbsolutePath)
+        module.name, ideModulePath, module.base.getCanonicalPath)
       val moduleNode = new DataNode(ProjectKeys.MODULE, moduleData, parent)
       moduleData.setInheritProjectCompileOutputPath(false)
       moduleNode.addChild(module.paths.toDataNode(moduleNode))
+      val tasksNodes = module.tasks.map(_.toDataNode(moduleNode))
+      tasksNodes.foreach(moduleNode.addChild)
       moduleNode
     }
   }
@@ -62,6 +65,13 @@ object DataNodeConversions {
         case Artifact.Doc(path)    => lib.addPath(LibraryPathType.DOC, path.getAbsolutePath)
       }
       new DataNode(ProjectKeys.LIBRARY, lib, parent)
+    }
+  }
+
+  implicit class DataNodeTask(task: Task) {
+    def toDataNode(parent: DataNode[ModuleData]): DataNode[TaskData] = {
+      val taskData = new TaskData(Id, task.name, parent.getData.getLinkedExternalProjectPath, task.name)
+      new DataNode(ProjectKeys.TASK, taskData, parent)
     }
   }
 

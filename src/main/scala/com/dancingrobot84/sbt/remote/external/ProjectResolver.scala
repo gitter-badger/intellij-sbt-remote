@@ -71,6 +71,7 @@ class ProjectResolver
         val extraction = for {
           _ <- (new DirectoriesExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
           _ <- Future.sequence(extractors.map(_.attach(client, projectRef, Log)._1))
+          _ <- (new TasksExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
         } yield Unit
 
         import DataNodeConversions._
