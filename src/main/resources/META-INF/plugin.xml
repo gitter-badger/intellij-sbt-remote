@@ -25,6 +25,8 @@
         <toolWindow id="SBT Remote" anchor="right" icon="/icons/sbt.png"
                     factoryClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowFactory"
                     conditionClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowCondition"/>
+        <configurationType implementation="com.dancingrobot84.sbt.remote.external.TaskConfigurationType"/>
+        <configurationProducer implementation="com.dancingrobot84.sbt.remote.external.TaskConfigurationProducer"/>
     </extensions>
 
 </idea-plugin>
