@@ -45,6 +45,7 @@ class StatefulProject(val base: URI, var name: String) extends Project with Clon
 class StatefulModule(val base: File, val id: Module.Id, var name: String) extends Module {
   private val paths0 = mutable.Set.empty[Path]
   private val dependencies0 = mutable.Set.empty[Dependency]
+  private val tasks0 = mutable.Set.empty[Task]
 
   override def addPath(path: Path) =
     paths0 += path
@@ -61,6 +62,11 @@ class StatefulModule(val base: File, val id: Module.Id, var name: String) extend
     dependencies0 -= dependency
 
   override def dependencies = dependencies0.toSet
+
+  override def addTask(task: Task): Unit =
+    tasks0 += task
+
+  override def tasks: Set[Task] = tasks0.toSet
 }
 
 class StatefulLibrary(val id: Library.Id) extends Library {

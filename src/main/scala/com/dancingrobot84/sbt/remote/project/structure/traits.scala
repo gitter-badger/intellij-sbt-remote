@@ -40,6 +40,9 @@ trait Module {
   def addDependency(dependency: Dependency): Unit
   def removeDependency(dependency: Dependency): Unit
   def dependencies: Set[Dependency]
+
+  def addTask(task: Task): Unit
+  def tasks: Set[Task]
 }
 
 object Module {
@@ -125,4 +128,6 @@ object Artifact {
   case class Source(file: File) extends Artifact
   case class Doc(file: File) extends Artifact
 }
+
+final case class Task(name: String)
 
