@@ -34,10 +34,10 @@ object Logger {
   trait Level
 
   object Level {
-    object Debug extends Level
-    object Info extends Level
-    object Warn extends Level
-    object Error extends Level
+    case object Debug extends Level
+    case object Info extends Level
+    case object Warn extends Level
+    case object Error extends Level
   }
 
   implicit def ideaLogger2Logger(logger: diagnostic.Logger): Logger = new Logger {
