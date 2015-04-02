@@ -6,7 +6,9 @@
 
     <description>SBT support plugin for Intellij IDEA via sbt-remote-control</description>
 
-    <idea-version since-build="139"/>
+    <idea-version since-build="141.177" until-build="142.0"/>
+
+    <depends>org.intellij.scala</depends>
 
     <application-components>
         <component>
