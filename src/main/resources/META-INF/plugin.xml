@@ -16,6 +16,12 @@
         </component>
     </application-components>
 
+    <project-components>
+        <component>
+            <implementation-class>com.dancingrobot84.sbt.remote.project.components.SessionListener</implementation-class>
+        </component>
+    </project-components>
+
     <extensions defaultExtensionNs="com.intellij">
         <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.ExternalSystemManager"/>
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.SystemSettings"/>
@@ -29,6 +35,9 @@
                     conditionClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowCondition"/>
         <configurationType implementation="com.dancingrobot84.sbt.remote.external.TaskConfigurationType"/>
         <configurationProducer implementation="com.dancingrobot84.sbt.remote.external.TaskConfigurationProducer"/>
+        <toolWindow id="SBT Remote REPL" anchor="bottom" icon="/icons/sbt.png"
+                factoryClass="com.dancingrobot84.sbt.remote.console.ConsoleToolWindowFactory"
+                conditionClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowCondition"/>
     </extensions>
 
 </idea-plugin>
