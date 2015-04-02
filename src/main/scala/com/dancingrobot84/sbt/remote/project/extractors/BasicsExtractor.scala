@@ -15,7 +15,7 @@ import scala.util.{ Failure, Success, Try }
  * @author: Nikolay Obedin
  * @since: 2/18/15.
  */
-abstract class DirectoriesExtractor extends ExtractorAdapter {
+abstract class BasicsExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] =
     for {
@@ -31,6 +31,8 @@ abstract class DirectoriesExtractor extends ExtractorAdapter {
       _ <- watchSettingKey[Seq[File]]("test:managedResourceDirectories")(pathsWatcher(Path.GenTestResource))
       _ <- watchSettingKey[File]("classDirectory")(pathWatcher(Path.Output))
       _ <- watchSettingKey[File]("test:classDirectory")(pathWatcher(Path.TestOutput))
+      _ <- watchSettingKey[String]("scalaVersion")(versionWatcher)
+      _ <- watchSettingKey[Seq[String]]("scalacOptions")(scalacOptionsWatcher)
     } yield Unit
 
   private def baseDirWatcher(key: ScopedKey, result: Try[File])(implicit ctx: Extractor.Context): Unit = result match {
@@ -81,6 +83,28 @@ abstract class DirectoriesExtractor extends ExtractorAdapter {
       logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
       withProject { project =>
         project.modules.find(_.id == p.name).foreach(_.addPath(pathTrans(path)))
+      }
+    }
+    case Failure(exc) =>
+      logger.error(s"Failed retrieving '$key' key", exc)
+  }
+
+  private def versionWatcher(key: ScopedKey, result: Try[String])(
+    implicit ctx: Extractor.Context): Unit = result match {
+    case Success(scalaVersion) => ifProjectAccepted(key.scope.project) { p =>
+      withProject { project =>
+        project.modules.find(_.id == p.name).foreach(m => m.scalaVersion = Some(scalaVersion))
+      }
+    }
+    case Failure(exc) =>
+      logger.error(s"Failed retrieving '$key' key", exc)
+  }
+
+  private def scalacOptionsWatcher(key: ScopedKey, result: Try[Seq[String]])(
+    implicit ctx: Extractor.Context): Unit = result match {
+    case Success(options) => ifProjectAccepted(key.scope.project) { p =>
+      withProject { project =>
+        project.modules.find(_.id == p.name).foreach(m => m.scalacOptions = options)
       }
     }
     case Failure(exc) =>

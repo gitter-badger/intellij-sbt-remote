@@ -32,6 +32,8 @@ trait Module {
   val base: File
   val id: Module.Id
   var name: String
+  var scalaVersion: Option[String]
+  var scalacOptions: Seq[String]
 
   def addPath(path: Path): Unit
   def removePath(path: Path): Unit
