@@ -15,6 +15,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, Future, Promise }
+import scalaz.syntax.std.boolean._
 
 /**
  * @author Nikolay Obedin
@@ -37,9 +38,9 @@ class TaskManager
                             listener: ExternalSystemTaskNotificationListener): Unit = {
 
     val runAsIs = scriptParameters.contains("as-is")
-    val moduleName = Option(id.findProject)
-      .flatMap(findModuleByPath(_, projectPath))
-      .flatMap(getModuleName)
+    val moduleName = (!runAsIs).option {
+      Option(id.findProject).flatMap(findModuleByPath(_, projectPath)).flatMap(getModuleName)
+    }.flatten
 
     val logger = new Logger {
       def log(msg: String, level: Logger.Level, cause: Option[Throwable]): Unit = {
@@ -58,7 +59,7 @@ class TaskManager
       throw new ExternalSystemException("Project scope for current configuration is not set")
 
     executor = Some(new TasksExecutor(
-      projectPath, if (runAsIs) None else moduleName,
+      projectPath, moduleName,
       taskNames.asScala, settings, logger))
     executor.foreach(e => Await.ready(e.run(), Duration.Inf))
   }

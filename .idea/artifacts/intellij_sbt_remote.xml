@@ -21,6 +21,7 @@
         <element id="library" level="project" name="SBT: org.scala-sbt:serialization_2.11:0.1.1:jar" />
         <element id="library" level="project" name="SBT: org.spire-math:jawn-parser_2.11:0.6.0:jar" />
         <element id="library" level="project" name="SBT: org.spire-math:json4s-support_2.11:0.6.0:jar" />
+        <element id="library" level="project" name="SBT: org.scalaz:scalaz-core_2.11:7.1.1:jar" />
       </element>
       <element id="module-output" name="root" />
     </root>

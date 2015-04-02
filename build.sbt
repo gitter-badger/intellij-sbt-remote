@@ -1,3 +1,4 @@
+import sbt._
 import scalariform.formatter.preferences._
 
 val scalacOpts = Seq(
@@ -23,7 +24,8 @@ lazy val root = project.in(file("."))
     ideaBuild := "141.177.4",
     assemblyExcludedJars in assembly <<= ideaFullJars,
     libraryDependencies ++= Seq(
-      "com.typesafe.sbtrc" % "client-2-11" % "1.0-37163c266936173d582a90113a59c729872665e0"
+      "com.typesafe.sbtrc" % "client-2-11" % "1.0-37163c266936173d582a90113a59c729872665e0",
+      "org.scalaz" %% "scalaz-core" % "7.1.1"
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignParameters, true)
