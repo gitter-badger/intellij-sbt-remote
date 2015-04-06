@@ -58,9 +58,7 @@ class TaskManager
     if (!runAsIs && moduleName.isEmpty)
       throw new ExternalSystemException("Project scope for current configuration is not set")
 
-    executor = Some(new TasksExecutor(
-      projectPath, moduleName,
-      taskNames.asScala, settings, logger))
+    executor = Some(new TasksExecutor(projectPath, moduleName, taskNames.asScala, settings, logger))
     executor.foreach(e => Await.ready(e.run(), Duration.Inf))
   }
 
@@ -75,13 +73,10 @@ class TaskManager
 
   override def cancelTask(id: ExternalSystemTaskId,
                           listener: ExternalSystemTaskNotificationListener) =
-    executor.fold(true)(_.cancel())
+    executor.fold(false)(_.cancel())
 }
 
 object TaskManager {
-  sealed trait CurrentTask
-  case object EmptyCurrentTask extends CurrentTask
-  case class ConcreteCurrentTask(id: Long, name: String) extends CurrentTask
 
   final class TasksExecutor(projectPath: String,
                             moduleName: Option[String],
@@ -98,9 +93,23 @@ object TaskManager {
 
     def run(): Future[Unit] = {
       val connector = sbtConnectorFor(projectPath)
-      var currentTask: CurrentTask = EmptyCurrentTask
 
         def onConnect(client: SbtClient): Unit = {
+          var currentTask: Option[(Long, String)] = None
+
+          shouldCancelPromise.future.onFailure {
+            case exc: Exception =>
+              currentTask.synchronized {
+                tasks = Seq.empty
+                currentTask match {
+                  case Some((id, _)) => client.cancelExecution(id).collect {
+                    case false => isDonePromise.failure(exc)
+                  }
+                  case _ => isDonePromise.failure(exc)
+                }
+              }
+          }
+
           client.handleEvents {
             case logE: LogEvent => logE.entry match {
               case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
@@ -114,37 +123,24 @@ object TaskManager {
               case _ => // ignore
             }
             case ExecutionStarting(id) => currentTask match {
-              case ConcreteCurrentTask(taskId, name) if taskId == id =>
+              case Some((taskId, name)) if taskId == id =>
                 logger.info(s"'$name' is starting")
               case _ =>
             }
             case ExecutionSuccess(id) => currentTask match {
-              case ConcreteCurrentTask(taskId, name) if taskId == id =>
+              case Some((taskId, name)) if taskId == id =>
                 logger.info(s"'$name' is finished successfully")
                 executeNextTask()
               case _ =>
             }
             case ExecutionFailure(id) => currentTask match {
-              case ConcreteCurrentTask(taskId, name) if taskId == id =>
+              case Some((taskId, name)) if taskId == id =>
                 val msg = s"'$name' failed. Aborting."
                 logger.error(msg)
                 isDonePromise.tryFailure(new ExternalSystemException(msg))
               case _ =>
             }
             case _ => // ignore
-          }
-
-          shouldCancelPromise.future.onFailure {
-            case exc: Exception =>
-              currentTask.synchronized {
-                tasks = Seq.empty
-                currentTask match {
-                  case ConcreteCurrentTask(id, _) => client.cancelExecution(id).collect {
-                    case false => isDonePromise.failure(exc)
-                  }
-                  case _ => isDonePromise.failure(exc)
-                }
-              }
           }
 
             def executeNextTask(): Unit = currentTask.synchronized {
@@ -154,20 +150,21 @@ object TaskManager {
                 val task = tasks.head
                 tasks = tasks.tail
                 val id = Await.result(client.requestExecution(task, None), Duration.Inf)
-                currentTask = ConcreteCurrentTask(id, task)
+                currentTask = Some((id, task))
               }
             }
 
           executeNextTask()
         }
 
-      connector.open(onConnect, { (reconnect, reason) =>
+      val subscription = connector.open(onConnect, { (reconnect, reason) =>
         if (reconnect)
           logger.warn(reason)
         else
           isDonePromise.tryFailure(new ExternalSystemException(reason))
       })
 
+      isDonePromise.future.onComplete(_ => subscription.cancel())
       isDonePromise.future
     }
 
