@@ -2,23 +2,18 @@ package com.dancingrobot84.sbt.remote
 package console
 
 import java.awt.BorderLayout
-import java.util
 import javax.swing.JPanel
 
 import com.dancingrobot84.sbt.remote.project.components.SessionListener
 import com.dancingrobot84.sbt.remote.project.components.SessionListener.LogListener
-import com.intellij.execution.console.{BaseConsoleExecuteActionHandler, ConsoleExecuteAction, LanguageConsoleImpl, LanguageConsoleView}
-import com.intellij.execution.impl.ConsoleViewImpl.ClearAllAction
+import com.intellij.execution.console.{ BaseConsoleExecuteActionHandler, ConsoleExecuteAction, LanguageConsoleImpl, LanguageConsoleView }
 import com.intellij.execution.{ ui => UI }
-import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem._
 import com.intellij.openapi.application.ex.ApplicationManagerEx
 import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.{ToolWindow, ToolWindowFactory}
-
+import com.intellij.openapi.wm.{ ToolWindow, ToolWindowFactory }
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.JavaConverters._
 
 /**
  * @author Nikolay Obedin
@@ -49,20 +44,27 @@ class ConsoleView(project: Project) extends LanguageConsoleImpl(project, "SBT Re
 
   SessionListener(project).foreach { listener =>
     listener.addLogListener(new LogListener {
-      override def onMessage(msg: String): Unit = {
+      import SessionListener._
+      override def onMessage(message: Message): Unit = {
         ApplicationManagerEx.getApplicationEx.invokeLater(new Runnable {
           override def run(): Unit = {
-            if (!msg.startsWith("Read from stdout:"))
-              print(msg + "\n", UI.ConsoleViewContentType.NORMAL_OUTPUT)
+            message match {
+              case Message.Stdout(msg) =>
+                print(msg + "\n", UI.ConsoleViewContentType.NORMAL_OUTPUT)
+              case Message.Log(level, msg) =>
+                val contentType =
+                  if (level == Logger.Level.Info)
+                    UI.ConsoleViewContentType.SYSTEM_OUTPUT
+                  else
+                    UI.ConsoleViewContentType.ERROR_OUTPUT
+                print(s"[${level.toString.toLowerCase}] $msg\n", contentType)
+            }
             scrollToEnd()
           }
         })
       }
 
-      override def onRemoval(): Unit = {
-        if (!project.isOpen)
-          dispose()
-      }
+      override def onRemoval(): Unit = if (!project.isOpen) dispose()
     })
   }
 }
