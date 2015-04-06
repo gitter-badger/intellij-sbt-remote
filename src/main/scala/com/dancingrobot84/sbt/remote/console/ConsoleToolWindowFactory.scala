@@ -33,36 +33,31 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
     panel.add(toolbar.getComponent, BorderLayout.WEST)
     panel.add(consoleView.getComponent, BorderLayout.CENTER)
 
-      def registerShortcuts(action: AnAction): Unit =
+      def addAction(action: AnAction): Unit = {
         Option(action.getShortcutSet).foreach(ss => action.registerCustomShortcutSet(ss, consoleView.getComponent))
+        toolbarActions.add(action)
+      }
 
     val executionHandler = new ConsoleExecutionHandler(project)
 
-    val executeAction = new ConsoleExecuteAction(consoleView, executionHandler)
-    registerShortcuts(executeAction)
-    toolbarActions.add(executeAction)
+    addAction(new ConsoleExecuteAction(consoleView, executionHandler))
 
-    val stopExecutionAction = new AnAction() {
+    addAction(new AnAction() {
       copyFrom(ActionManager.getInstance().getAction(IdeActions.ACTION_STOP_PROGRAM))
       override def update(e: AnActionEvent): Unit =
         e.getPresentation.setEnabled(!consoleView.isEditable && executionHandler.isCancellable())
       override def actionPerformed(e: AnActionEvent): Unit =
         executionHandler.cancel()
-    }
-    registerShortcuts(stopExecutionAction)
-    toolbarActions.add(stopExecutionAction)
+    })
 
-    val clearAction = new ClearAllAction() {
+    addAction(new ClearAllAction() {
       override def update(e: AnActionEvent): Unit =
         e.getPresentation.setEnabled(consoleView.getHistoryViewer.getDocument.getTextLength > 0)
       override def actionPerformed(e: AnActionEvent): Unit =
         consoleView.clear()
-    }
-    registerShortcuts(clearAction)
-    toolbarActions.add(clearAction)
+    })
 
     toolbar.setTargetComponent(panel)
-
     toolWindow.getComponent.add(panel)
   }
 }
