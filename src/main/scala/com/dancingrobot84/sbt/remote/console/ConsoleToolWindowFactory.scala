@@ -7,6 +7,7 @@ import javax.swing.JPanel
 import com.dancingrobot84.sbt.remote.project.components.SessionListener
 import com.dancingrobot84.sbt.remote.project.components.SessionListener.LogListener
 import com.intellij.execution.console._
+import com.intellij.execution.impl.ConsoleViewImpl.ClearAllAction
 import com.intellij.execution.{ ui => UI }
 import com.intellij.openapi.actionSystem._
 import com.intellij.openapi.application.ex.ApplicationManagerEx
@@ -50,6 +51,15 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
     }
     registerShortcuts(stopExecutionAction)
     toolbarActions.add(stopExecutionAction)
+
+    val clearAction = new ClearAllAction() {
+      override def update(e: AnActionEvent): Unit =
+        e.getPresentation.setEnabled(consoleView.getHistoryViewer.getDocument.getTextLength > 0)
+      override def actionPerformed(e: AnActionEvent): Unit =
+        consoleView.clear()
+    }
+    registerShortcuts(clearAction)
+    toolbarActions.add(clearAction)
 
     toolbar.setTargetComponent(panel)
 
