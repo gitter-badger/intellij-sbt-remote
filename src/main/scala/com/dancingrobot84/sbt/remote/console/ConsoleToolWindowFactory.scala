@@ -13,7 +13,9 @@ import com.intellij.openapi.application.ex.ApplicationManagerEx
 import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.{ ToolWindow, ToolWindowFactory }
+import sbt.protocol.{ ExecutionFailure, ExecutionSuccess }
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Promise
 
 /**
  * @author Nikolay Obedin
@@ -71,10 +73,26 @@ class ConsoleView(project: Project) extends LanguageConsoleImpl(project, "SBT Re
 
 class ConsoleExecutionHandler(project: Project) extends BaseConsoleExecuteActionHandler(false) {
   override def execute(text: String, console: LanguageConsoleView): Unit = {
-    sbtConnectorFor(project.getBasePath).open({ client =>
-      client.requestExecution(text, None)
+    val donePromise = Promise[Unit]()
+    console.setEditable(false)
+    val subscription = sbtConnectorFor(project.getBasePath).open({ client =>
+      for {
+        id0 <- client.requestExecution(text, None)
+      } {
+        client.handleEvents {
+          case ExecutionSuccess(id) if id == id0 =>
+            donePromise.trySuccess(Unit)
+          case ExecutionFailure(id) if id == id0 =>
+            donePromise.trySuccess(Unit)
+          case _ => // do nothing
+        }
+      }
     }, { (_, _) =>
       Unit
     })
+    donePromise.future.onComplete { _ =>
+      console.setEditable(true)
+      subscription.cancel
+    }
   }
 }
