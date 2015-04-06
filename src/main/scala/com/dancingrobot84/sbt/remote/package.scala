@@ -5,8 +5,9 @@ import javax.swing.Icon
 
 import com.intellij.openapi.diagnostic
 import com.intellij.openapi.util.IconLoader
-import sbt.client.SbtConnector
-
+import sbt.client.{ SbtClient, Subscription, SbtChannel, SbtConnector }
+import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 import scala.language.implicitConversions
 
 /**
@@ -20,6 +21,31 @@ package object remote {
   implicit def string2icon(resourcePath: String): Icon =
     IconLoader.getIcon(resourcePath)
 
-  def sbtConnectorFor(path: String): SbtConnector =
-    SbtConnector("idea", "Intellij IDEA", new File(path))
+  private val connectorsPool = mutable.HashMap.empty[String, SbtConnector]
+
+  def sbtConnectorFor(path: String): SbtConnector = connectorsPool.synchronized {
+    connectorsPool.get(path) match {
+      case Some(connector) =>
+        connector
+      case None =>
+        val connector = new SbtConnector {
+          private val delegate = SbtConnector("idea", "Intellij IDEA", new File(path))
+          private var openedClient: Option[SbtClient] = None
+
+          override def open(onConnect: (SbtClient) => Unit, onError: (Boolean, String) => Unit)(implicit ex: ExecutionContext): Subscription = {
+              def onChannelConnect(channel: SbtChannel): Unit = {
+                openedClient = Some(openedClient.getOrElse(SbtClient(channel)))
+                return openedClient.foreach(onConnect)
+              }
+            openChannel(onChannelConnect, onError)
+          }
+
+          override def openChannel(onConnect: (SbtChannel) => Unit, onError: (Boolean, String) => Unit)(implicit ex: ExecutionContext): Subscription = delegate.openChannel(onConnect, onError)
+
+          override def close(): Unit = delegate.close
+        }
+        connectorsPool.put(path, connector)
+        connector
+    }
+  }
 }
