@@ -31,7 +31,7 @@ trait Logger {
 }
 
 object Logger {
-  trait Level
+  sealed trait Level
 
   object Level {
     case object Debug extends Level
