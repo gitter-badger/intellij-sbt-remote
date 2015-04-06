@@ -6,7 +6,7 @@ import javax.swing.JPanel
 
 import com.dancingrobot84.sbt.remote.project.components.SessionListener
 import com.dancingrobot84.sbt.remote.project.components.SessionListener.LogListener
-import com.intellij.execution.console.{ BaseConsoleExecuteActionHandler, ConsoleExecuteAction, LanguageConsoleImpl, LanguageConsoleView }
+import com.intellij.execution.console._
 import com.intellij.execution.{ ui => UI }
 import com.intellij.openapi.actionSystem._
 import com.intellij.openapi.application.ex.ApplicationManagerEx
@@ -14,6 +14,7 @@ import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.{ ToolWindow, ToolWindowFactory }
 import sbt.protocol.{ ExecutionFailure, ExecutionSuccess }
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Promise
 
@@ -31,9 +32,24 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
     panel.add(toolbar.getComponent, BorderLayout.WEST)
     panel.add(consoleView.getComponent, BorderLayout.CENTER)
 
-    val execAction = new ConsoleExecuteAction(consoleView, new ConsoleExecutionHandler(project))
-    Option(execAction.getShortcutSet).foreach(ss => execAction.registerCustomShortcutSet(ss, consoleView.getComponent))
-    toolbarActions.add(execAction)
+      def registerShortcuts(action: AnAction): Unit =
+        Option(action.getShortcutSet).foreach(ss => action.registerCustomShortcutSet(ss, consoleView.getComponent))
+
+    val executionHandler = new ConsoleExecutionHandler(project)
+
+    val executeAction = new ConsoleExecuteAction(consoleView, executionHandler)
+    registerShortcuts(executeAction)
+    toolbarActions.add(executeAction)
+
+    val stopExecutionAction = new AnAction() {
+      copyFrom(ActionManager.getInstance().getAction(IdeActions.ACTION_STOP_PROGRAM))
+      override def update(e: AnActionEvent): Unit =
+        e.getPresentation.setEnabled(!consoleView.isEditable && executionHandler.isCancellable())
+      override def actionPerformed(e: AnActionEvent): Unit =
+        executionHandler.cancel()
+    }
+    registerShortcuts(stopExecutionAction)
+    toolbarActions.add(stopExecutionAction)
 
     toolbar.setTargetComponent(panel)
 
@@ -72,27 +88,43 @@ class ConsoleView(project: Project) extends LanguageConsoleImpl(project, "SBT Re
 }
 
 class ConsoleExecutionHandler(project: Project) extends BaseConsoleExecuteActionHandler(false) {
+
+  private var isTaskDonePromise: Option[Promise[Unit]] = None
+  private var cancelPromise: Option[Promise[Unit]] = None
+
+  def cancel(): Unit = cancelPromise.foreach(_.tryFailure(null))
+
+  def isCancellable(): Boolean = cancelPromise.fold(false)(!_.isCompleted)
+
   override def execute(text: String, console: LanguageConsoleView): Unit = {
-    val donePromise = Promise[Unit]()
+    isTaskDonePromise = Some(Promise())
+    cancelPromise = Some(Promise())
+
     console.setEditable(false)
     val subscription = sbtConnectorFor(project.getBasePath).open({ client =>
       for {
         id0 <- client.requestExecution(text, None)
       } {
+        cancelPromise.foreach(_.future.onFailure {
+          case _ => client.cancelExecution(id0).onSuccess {
+            case false => isTaskDonePromise.foreach(_.trySuccess(Unit))
+          }
+        })
         client.handleEvents {
           case ExecutionSuccess(id) if id == id0 =>
-            donePromise.trySuccess(Unit)
+            isTaskDonePromise.foreach(_.trySuccess(Unit))
           case ExecutionFailure(id) if id == id0 =>
-            donePromise.trySuccess(Unit)
+            isTaskDonePromise.foreach(_.trySuccess(Unit))
           case _ => // do nothing
         }
       }
     }, { (_, _) =>
       Unit
     })
-    donePromise.future.onComplete { _ =>
+
+    isTaskDonePromise.foreach(_.future.onComplete { _ =>
       console.setEditable(true)
-      subscription.cancel
-    }
+      subscription.cancel()
+    })
   }
 }
