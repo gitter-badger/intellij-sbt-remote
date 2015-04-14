@@ -3,6 +3,7 @@ package com.dancingrobot84.sbt.remote.project.extractors
 import com.dancingrobot84.sbt.remote.project.structure._
 import sbt.protocol._
 
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }
@@ -22,14 +23,33 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
   private def updateWatcher(key: ScopedKey, result: Try[sbt.UpdateReport])(
     implicit ctx: Extractor.Context): Unit = result match {
     case Success(updateReport) => ifProjectAccepted(key.scope.project) { p =>
-      updateReport.configurations.foreach { confReport =>
-        Configuration.fromString(confReport.configuration).foreach { conf =>
-          confReport.modules.foreach(m => addLibraryDependency(p.name, m, conf))
-        }
+      regroupConfigurationReports(updateReport.configurations).foreach {
+        case (moduleReport, confs) =>
+          confs.foreach(conf => addLibraryDependency(p.name, moduleReport, conf))
       }
     }
     case Failure(exc) =>
       logger.error(s"Failed retrieving 'update' key", exc)
+  }
+
+  private def regroupConfigurationReports(reports: Seq[sbt.ConfigurationReport]): Map[sbt.ModuleReport, Set[Configuration]] = {
+    val result = mutable.HashMap.empty[sbt.ModuleReport, Set[Configuration]]
+    reports.foreach { report =>
+      Configuration.fromString(report.configuration).foreach { conf =>
+        report.modules.foreach { module =>
+          val moduleConfs = result.getOrElse(module, Set.empty)
+          result.put(module, moduleConfs + conf)
+        }
+      }
+    }
+    result.mapValues { confs =>
+      if (confs == Set(Configuration.Test, Configuration.Compile, Configuration.Runtime))
+        Set[Configuration](Configuration.Compile)
+      else if (confs == Set(Configuration.Test, Configuration.Compile))
+        Set[Configuration](Configuration.Provided)
+      else
+        confs
+    }.toMap
   }
 
   private def addLibraryDependency(moduleId: Module.Id, moduleReport: sbt.ModuleReport, configuration: Configuration)(
