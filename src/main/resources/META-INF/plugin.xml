@@ -10,12 +10,6 @@
 
     <depends>org.intellij.scala</depends>
 
-    <application-components>
-        <component>
-            <implementation-class>com.dancingrobot84.sbt.remote.misc.StartupRoutines</implementation-class>
-        </component>
-    </application-components>
-
     <project-components>
         <component>
             <implementation-class>com.dancingrobot84.sbt.remote.project.components.SessionListener</implementation-class>
@@ -24,8 +18,10 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.ExternalSystemManager"/>
+
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.SystemSettings"/>
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.LocalSettings"/>
+
         <projectImportProvider implementation="com.dancingrobot84.sbt.remote.external.ProjectImportProvider"/>
         <projectImportBuilder implementation="com.dancingrobot84.sbt.remote.external.ProjectImportBuilder"/>
         <projectConfigurable groupId="build.tools" displayName="SBT Remote"
@@ -33,8 +29,10 @@
         <toolWindow id="SBT Remote" anchor="right" icon="/icons/sbt.png"
                     factoryClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowFactory"
                     conditionClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowCondition"/>
+
         <configurationType implementation="com.dancingrobot84.sbt.remote.external.TaskConfigurationType"/>
         <configurationProducer implementation="com.dancingrobot84.sbt.remote.external.TaskConfigurationProducer"/>
+
         <toolWindow id="SBT Remote REPL" anchor="bottom" icon="/icons/sbt.png"
                 factoryClass="com.dancingrobot84.sbt.remote.console.ConsoleToolWindowFactory"
                 conditionClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowCondition"/>
