@@ -27,6 +27,7 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
         case (moduleReport, confs) =>
           confs.foreach(conf => addLibraryDependency(p.name, moduleReport, conf))
       }
+      updateReport.configurations.find(_.configuration == "scala-tool").foreach(c => setupScalaSdk(p.name, c.modules))
     }
     case Failure(exc) =>
       logger.error(s"Failed retrieving 'update' key", exc)
@@ -69,6 +70,19 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
           logger.warn(s"Library '${libInProject.id}' adds '${artifact.file}' to itself")
         }
         module.addDependency(Dependency.Library(libInProject.id, configuration))
+      }
+    }
+  }
+
+  private def setupScalaSdk(moduleId: Module.Id, modules: Seq[sbt.ModuleReport])(
+    implicit ctx: Extractor.Context): Unit = {
+    val classpathLibrariesNames = Seq("scala-library", "scala-compiler", "scala-reflect")
+    val classpathModules = modules.filter(m => classpathLibrariesNames.contains(m.module.name))
+    classpathModules.find(_.module.name == "scala-library").foreach { scalaLibModule =>
+      val classpathFiles = classpathModules.flatMap(_.artifacts.map(_._2))
+      val scalaSdk = ScalaSdk(scalaLibModule.module.revision, classpathFiles)
+      withProject { project =>
+        project.modules.find(_.id == moduleId).foreach(_.scalaSdk = Some(scalaSdk))
       }
     }
   }

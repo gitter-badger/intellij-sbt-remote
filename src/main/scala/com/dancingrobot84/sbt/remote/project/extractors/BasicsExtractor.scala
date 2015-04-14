@@ -31,7 +31,6 @@ abstract class BasicsExtractor extends ExtractorAdapter {
       _ <- watchSettingKey[Seq[File]]("test:managedResourceDirectories")(pathsWatcher(Path.GenTestResource))
       _ <- watchSettingKey[File]("classDirectory")(pathWatcher(Path.Output))
       _ <- watchSettingKey[File]("test:classDirectory")(pathWatcher(Path.TestOutput))
-      _ <- watchSettingKey[String]("scalaVersion")(versionWatcher)
       _ <- watchSettingKey[Seq[String]]("scalacOptions")(scalacOptionsWatcher)
     } yield Unit
 
@@ -89,17 +88,6 @@ abstract class BasicsExtractor extends ExtractorAdapter {
       logger.error(s"Failed retrieving '$key' key", exc)
   }
 
-  private def versionWatcher(key: ScopedKey, result: Try[String])(
-    implicit ctx: Extractor.Context): Unit = result match {
-    case Success(scalaVersion) => ifProjectAccepted(key.scope.project) { p =>
-      withProject { project =>
-        project.modules.find(_.id == p.name).foreach(m => m.scalaVersion = Some(scalaVersion))
-      }
-    }
-    case Failure(exc) =>
-      logger.error(s"Failed retrieving '$key' key", exc)
-  }
-
   private def scalacOptionsWatcher(key: ScopedKey, result: Try[Seq[String]])(
     implicit ctx: Extractor.Context): Unit = result match {
     case Success(options) => ifProjectAccepted(key.scope.project) { p =>
@@ -110,5 +98,4 @@ abstract class BasicsExtractor extends ExtractorAdapter {
     case Failure(exc) =>
       logger.error(s"Failed retrieving '$key' key", exc)
   }
-
 }

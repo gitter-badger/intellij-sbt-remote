@@ -32,8 +32,8 @@ trait Module {
   val base: File
   val id: Module.Id
   var name: String
-  var scalaVersion: Option[String]
   var scalacOptions: Seq[String]
+  var scalaSdk: Option[ScalaSdk]
 
   def addPath(path: Path): Unit
   def removePath(path: Path): Unit
@@ -104,6 +104,8 @@ object Dependency {
   case class Library(id: Lib.Id, configuration: Configuration) extends Dependency
   case class Module(id: Mod.Id, configuration: Configuration) extends Dependency
 }
+
+case class ScalaSdk(version: String, compilerClasspath: Seq[File])
 
 sealed trait Configuration
 object Configuration {

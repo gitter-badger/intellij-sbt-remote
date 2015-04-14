@@ -9,6 +9,8 @@ import com.intellij.openapi.externalSystem.model.task.TaskData
 import com.intellij.openapi.externalSystem.model.{ DataNode, ProjectKeys }
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.roots.DependencyScope
+import org.jetbrains.plugins.scala.project.Version
+import org.jetbrains.sbt.project.data.ScalaSdkData
 
 /**
  * @author: Nikolay Obedin
@@ -48,10 +50,19 @@ object DataNodeConversions {
         module.id, external.Id, StdModuleTypes.JAVA.getId,
         module.name, ideModulePath, module.base.getCanonicalPath)
       val moduleNode = new DataNode(ProjectKeys.MODULE, moduleData, parent)
+
       moduleData.setInheritProjectCompileOutputPath(false)
       moduleNode.addChild(module.paths.toDataNode(moduleNode))
+
+      module.scalaSdk.foreach {
+        case ScalaSdk(version, compilerClasspath) =>
+          val sdkData = new ScalaSdkData(Id, Version(version), "", compilerClasspath, module.scalacOptions)
+          moduleNode.addChild(new DataNode(ScalaSdkData.Key, sdkData, moduleNode))
+      }
+
       val tasksNodes = module.tasks.map(_.toDataNode(moduleNode))
       tasksNodes.foreach(moduleNode.addChild)
+
       moduleNode
     }
   }
