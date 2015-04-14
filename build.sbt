@@ -24,6 +24,7 @@ lazy val root = project.in(file("."))
     ideaBuild := "141.177.4",
     ideaPlugins += "Scala",
     assemblyExcludedJars in assembly <<= ideaFullJars,
+    assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala=false),
     libraryDependencies ++= Seq(
       "com.typesafe.sbtrc" % "client-2-11" % "1.0-37163c266936173d582a90113a59c729872665e0",
       "org.scalaz" %% "scalaz-core" % "7.1.1"
@@ -35,6 +36,16 @@ lazy val root = project.in(file("."))
       .setPreference(IndentLocalDefs, true)
       .setPreference(IndentPackageBlocks, false)
       .setPreference(PreserveDanglingCloseParenthesis, true)
+  )
+
+lazy val ideaRunner = project.in(file("ideaRunner"))
+  .dependsOn(root % Provided)
+  .settings(
+    scalaVersion := "2.11.5",
+    autoScalaLibrary := false,
+    unmanagedJars in Compile <<= ideaMainJars.in(root),
+    unmanagedJars in Compile += file(System.getProperty("java.home")).getParentFile / "lib" / "tools.jar",
+    unmanagedJars in Provided <<= ideaPluginJars.in(root)
   )
 
 updateIdea <<= (updateIdea, ideaBaseDirectory, ideaBuild, streams) map { (_, base, build, streams) =>
