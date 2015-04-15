@@ -4,6 +4,7 @@ package extractors
 
 import java.io.File
 import com.dancingrobot84.sbt.remote.project.structure.Path
+import com.intellij.openapi.util.io.FileUtil
 import sbt.protocol.ScopedKey
 import sbt.serialization._
 
@@ -67,7 +68,12 @@ abstract class BasicsExtractor extends ExtractorAdapter {
     case Success(paths) => ifProjectAccepted(key.scope.project) { p =>
       paths.foreach { path =>
         withProject { project =>
-          project.modules.find(_.id == p.name).foreach(_.addPath(pathTrans(path)))
+          project.modules.find(_.id == p.name).foreach { module =>
+            if (FileUtil.isAncestor(module.base, path, false))
+              module.addPath(pathTrans(path))
+            else
+              logger.warn(s"'$path' is not added because it is outside of module's '${p.name}' base directory")
+          }
         }
         logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
       }
