@@ -33,11 +33,21 @@ package object remote {
           private var openedClient: Option[SbtClient] = None
 
           override def open(onConnect: (SbtClient) => Unit, onError: (Boolean, String) => Unit)(implicit ex: ExecutionContext): Subscription = {
-              def onChannelConnect(channel: SbtChannel): Unit = {
+              def onChannelConnect(channel: SbtChannel): Unit = openedClient.synchronized {
                 openedClient = Some(openedClient.getOrElse(SbtClient(channel)))
                 return openedClient.foreach(onConnect)
               }
-            openChannel(onChannelConnect, onError)
+              def onChannelDisconnect(reconnecting: Boolean, message: String): Unit = {
+                onError(reconnecting, message)
+                if (!reconnecting) connectorsPool.synchronized {
+                  connectorsPool.remove(path)
+                } else openedClient.synchronized {
+                  openedClient.foreach(_.close)
+                  openedClient = None
+                }
+
+              }
+            openChannel(onChannelConnect, onChannelDisconnect)
           }
 
           override def openChannel(onConnect: (SbtChannel) => Unit, onError: (Boolean, String) => Unit)(implicit ex: ExecutionContext): Subscription = delegate.openChannel(onConnect, onError)
