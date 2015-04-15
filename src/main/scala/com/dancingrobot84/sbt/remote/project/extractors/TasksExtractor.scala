@@ -21,18 +21,14 @@ abstract class TasksExtractor extends ExtractorAdapter {
     for {
       completions <- ctx.client.possibleAutocompletions(s"$projectName/", 0)
     } yield {
-      completions.collect { case Completion(name, _, false) => name }
+      completions.collect { case Completion(_, name, false) => name }.distinct
     }
 
-  private def filterKeys(projectName: String)(completions: Vector[String])(implicit ctx: Extractor.Context): Future[Vector[Task]] = {
-    val analysis = Future.sequence(completions.map(c => ctx.client.analyzeExecution(s"$projectName/$c")))
-    analysis.map { a =>
-      a.collect { case ExecutionAnalysisKey(keys) => keys.map(_.key.name) }.flatMap(_.map(Task))
-    }
-  }
+  private def filterKeys(completions: Vector[String])(implicit ctx: Extractor.Context): Future[Vector[Task]] =
+    Future.sequence(completions.map(ctx.client.lookupScopedKey)).map(_.flatten.map(k => Task(k.key.name)))
 
   private def addTasks(projectName: String)(implicit ctx: Extractor.Context): Future[Unit] =
-    getCompletions(projectName).flatMap(filterKeys(projectName)).map { tasks =>
+    getCompletions(projectName).flatMap(filterKeys).map { tasks =>
       tasks.map(task => withProject { project =>
         project.modules.find(_.id == projectName).foreach(_.addTask(task))
       })
