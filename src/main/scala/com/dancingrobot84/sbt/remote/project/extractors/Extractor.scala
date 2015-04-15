@@ -2,9 +2,9 @@ package com.dancingrobot84.sbt.remote
 package project
 package extractors
 
-import com.dancingrobot84.sbt.remote.project.structure.{ ProjectRef, Project }
+import com.dancingrobot84.sbt.remote.project.structure.{ Project, ProjectRef }
 import sbt.client._
-import sbt.protocol.{ MinimalBuildStructure, ProjectReference, ScopedKey }
+import sbt.protocol.{ MinimalBuildStructure, MinimalProjectStructure, ProjectReference, ScopedKey }
 import sbt.serialization._
 
 import scala.collection.mutable
@@ -21,7 +21,7 @@ trait Extractor {
 }
 
 trait Context {
-  def getContext(client: SbtClient, logger: Logger, acceptedProjects: Vector[ProjectReference], projectRef: ProjectRef): Extractor.Context
+  def getContext(client: SbtClient, logger: Logger, acceptedProjects: Vector[MinimalProjectStructure], projectRef: ProjectRef): Extractor.Context
 }
 
 abstract class ExtractorAdapter extends Extractor with Context {
@@ -58,11 +58,11 @@ abstract class ExtractorAdapter extends Extractor with Context {
 
   private def doWatch[T](key: String)(keyProcessor: ScopedKey => Future[WatchResult[T]])(
     implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context): Future[Seq[WatchResult[T]]] = {
-    val allProjectKeys = ctx.acceptedProjects.map(pr => s"${pr.name}/$key")
+    val allProjectKeys = ctx.acceptedProjects.map(pr => s"${pr.id.name}/$key")
     for {
       allKeys <- Future.traverse(allProjectKeys)(ctx.client.lookupScopedKey).map(_.flatten.toSeq)
       results <- Future.sequence(allKeys
-        .filter(_.scope.project.exists(ctx.acceptedProjects.contains))
+        .filter(_.scope.project.exists(p => ctx.acceptedProjects.exists(_.id == p)))
         .map(keyProcessor))
     } yield results
   }
@@ -71,7 +71,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
     implicit ctx: Extractor.Context): Unit =
     project.foreach { p =>
       val base = withProject(_.base)
-      if (p.build == base && ctx.acceptedProjects.contains(p))
+      if (p.build == base && ctx.acceptedProjects.exists(_.id == p))
         onAccept(p)
     }
 
@@ -91,7 +91,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
         buildOpt.map { build =>
           val acceptedProjects = allProjects.filter { p =>
             p.id.build == build && p.plugins.contains("sbt.plugins.JvmPlugin")
-          }.map(_.id)
+          }
 
           if (acceptedProjects.isEmpty)
             initPromise.failure(new Error("No suitable modules found"))
@@ -112,7 +112,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
 trait SynchronizedContext extends Context {
   override def getContext(client0: SbtClient,
                           logger0: Logger,
-                          acceptedProjects0: Vector[ProjectReference],
+                          acceptedProjects0: Vector[MinimalProjectStructure],
                           projectRef0: ProjectRef) = new Extractor.Context {
     override val client = client0
     override val logger = logger0
@@ -129,7 +129,7 @@ object Extractor {
   trait Context {
     val client: SbtClient
     val logger: Logger
-    val acceptedProjects: Vector[ProjectReference]
+    val acceptedProjects: Vector[MinimalProjectStructure]
     def withProject[T](trans: Project => T): T
   }
 }

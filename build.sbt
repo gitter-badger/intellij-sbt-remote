@@ -25,9 +25,11 @@ lazy val root = project.in(file("."))
     ideaPlugins += "Scala",
     assemblyExcludedJars in assembly <<= ideaFullJars,
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala=false),
+    resolvers += Resolver.typesafeIvyRepo("releases"),
     libraryDependencies ++= Seq(
-      "com.typesafe.sbtrc" % "client-2-11" % "1.0-37163c266936173d582a90113a59c729872665e0",
-      "org.scalaz" %% "scalaz-core" % "7.1.1"
+      "com.typesafe.sbtrc" % "client-2-11" % "1.0-32195589a00595c2bfd00c7ff10dc1dd8b99e2fd",
+      "org.scalaz" %% "scalaz-core" % "7.1.1",
+      "org.scala-sbt" %% "serialization" % "0.1.1"
     ),
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignParameters, true)

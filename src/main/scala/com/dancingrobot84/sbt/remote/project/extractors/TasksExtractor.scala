@@ -14,7 +14,7 @@ import scala.concurrent.Future
  */
 abstract class TasksExtractor extends ExtractorAdapter {
   override protected def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
-    Future.sequence(ctx.acceptedProjects.map(pr => addTasks(pr.name))).map(_ => Unit)
+    Future.sequence(ctx.acceptedProjects.map(pr => addTasks(pr.id.name))).map(_ => Unit)
   }
 
   private def getCompletions(projectName: String)(implicit ctx: Extractor.Context): Future[Vector[String]] =

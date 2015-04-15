@@ -4,21 +4,15 @@ SBT support plugin for Intellij IDEA via sbt-remote-control. WIP.
 
 ## Building
 
-The first two steps are necessary until
-[these](https://github.com/sbt/sbt-remote-control/pull/284)
-[changes](https://github.com/sbt/sbt-remote-control/pull/286) are not merged.
-
-### Getting fixed sbt-core-next
-
-1. Clone `sbt/sbt-core-next`
-2. Change `serializationVersion` in build.sbt to `0.1.1`
-3. Do `+publishLocal`
+The first step is necessary until
+[this change](https://github.com/sbt/sbt-remote-control/pull/292)
+is not merged.
 
 ### Getting fixed sbt-remote-control
 
 1. Clone `dancingrobot84/sbt-remote-control`
-2. Switch to `wip/dancingrobot84` branch
-3. Do `+publishLocal`. Don't worry about `integration-test` project error.
+2. Switch to `fix/enable-UpdateReport-serializer` branch
+3. Do `publishLocal` in SBT repl
 
 ### Building plugin
 

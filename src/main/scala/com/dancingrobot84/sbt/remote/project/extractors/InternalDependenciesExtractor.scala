@@ -18,10 +18,9 @@ abstract class InternalDependenciesExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
     for {
-      _ <- watchSettingKey[BuildDependencies]("buildDependencies")(buildDependenciesWatcher)
       _ <- watchTaskKey[Seq[Attributed[File]]]("unmanagedJars")(classpathWatcher(Configuration.Compile))
       _ <- watchTaskKey[Seq[Attributed[File]]]("test:unmanagedJars")(classpathWatcher(Configuration.Test))
-    } yield Unit
+    } yield processInterProjectDependencies
   }
 
   private def classpathWatcher(conf: Configuration)(key: ScopedKey, result: Try[Seq[Attributed[File]]])(
@@ -43,23 +42,20 @@ abstract class InternalDependenciesExtractor extends ExtractorAdapter {
       logger.error(s"Failed retrieving '$key' key", exc)
   }
 
-  private def buildDependenciesWatcher(key: ScopedKey, result: Try[BuildDependencies])(
-    implicit ctx: Extractor.Context): Unit = result match {
-    case Success(buildDependencies) =>
-      for {
-        (projectRef, classpathDeps) <- buildDependencies.classpath
-        dependency <- classpathDeps
-        configuration = dependency.configuration
-          .flatMap(Configuration.fromString)
-          .getOrElse(Configuration.Compile)
-      } {
-        withProject(_.modules.find(_.id == projectRef.name).foreach { module =>
-          module.addDependency(Dependency.Module(dependency.project.name, configuration))
-        })
-        logger.warn(s"Module '${projectRef.name}' depends on '${dependency.project.name}'")
+  private def processInterProjectDependencies(implicit ctx: Extractor.Context): Unit =
+    ctx.acceptedProjects.foreach { projectRef =>
+      projectRef.dependencies.foreach { dependencies =>
+        for {
+          dependency <- dependencies.classpath
+          configuration = dependency.configuration
+            .flatMap(Configuration.fromString)
+            .getOrElse(Configuration.Compile)
+        } {
+          withProject(_.modules.find(_.id == projectRef.id.name).foreach { module =>
+            module.addDependency(Dependency.Module(dependency.project.name, configuration))
+          })
+          logger.warn(s"Module '${projectRef.id.name}' depends on '${dependency.project.name}'")
+        }
       }
-    case Failure(exc) =>
-      logger.error(s"Failed retrieving 'buildDependencies' key", exc)
-  }
-
+    }
 }
