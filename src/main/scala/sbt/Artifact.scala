@@ -13,8 +13,6 @@ object Artifact {
   private val optStringUnpickler = implicitly[Unpickler[Option[String]]]
   private val vectorConfigurationPickler = implicitly[Pickler[Vector[Configuration]]]
   private val vectorConfigurationUnpickler = implicitly[Unpickler[Vector[Configuration]]]
-  private val stringStringMapPickler = implicitly[Pickler[Map[String, String]]]
-  private val stringStringMapUnpickler = implicitly[Unpickler[Map[String, String]]]
 
   implicit val pickler: Pickler[Artifact] = new Pickler[Artifact] {
     val tag = implicitly[FastTypeTag[Artifact]]

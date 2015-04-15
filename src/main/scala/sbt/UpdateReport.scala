@@ -8,8 +8,7 @@ import sbt.serialization._
  * @author Nikolay Obedin
  * @since 3/25/15.
  */
-final class UpdateReport(val cachedDescriptor: File,
-                         val configurations: Seq[ConfigurationReport])
+final class UpdateReport(val configurations: Seq[ConfigurationReport])
 
 object UpdateReport {
   private val vectorConfigurationReportPickler = implicitly[Pickler[Vector[ConfigurationReport]]]
@@ -23,10 +22,6 @@ object UpdateReport {
       builder.pushHints()
       builder.hintTag(tag)
       builder.beginEntry(a)
-      builder.putField("cachedDescriptor", { b =>
-        b.hintTag(fileTag)
-        filePickler.pickle(a.cachedDescriptor, b)
-      })
       builder.putField("configurations", { b =>
         b.hintTag(vectorConfigurationReportTag)
         vectorConfigurationReportPickler.pickle(a.configurations.toVector, b)
@@ -39,9 +34,8 @@ object UpdateReport {
       reader.pushHints()
       reader.hintTag(tag)
       reader.beginEntry()
-      val cachedDescriptor = filePickler.unpickleEntry(reader.readField("cachedDescriptor")).asInstanceOf[File]
       val configurations = vectorConfigurationReportUnpickler.unpickleEntry(reader.readField("configurations")).asInstanceOf[Vector[ConfigurationReport]]
-      val result = new UpdateReport(cachedDescriptor, configurations)
+      val result = new UpdateReport(configurations)
       reader.endEntry()
       reader.popHints()
       result
