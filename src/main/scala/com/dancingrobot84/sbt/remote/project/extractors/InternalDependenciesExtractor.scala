@@ -17,6 +17,7 @@ import scala.util.{ Failure, Success, Try }
 abstract class InternalDependenciesExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
+    logger.info("Extracting internal dependencies...")
     for {
       _ <- watchTaskKey[Seq[Attributed[File]]]("unmanagedJars")(classpathWatcher(Configuration.Compile))
       _ <- watchTaskKey[Seq[Attributed[File]]]("test:unmanagedJars")(classpathWatcher(Configuration.Test))
@@ -24,23 +25,23 @@ abstract class InternalDependenciesExtractor extends ExtractorAdapter {
   }
 
   private def classpathWatcher(conf: Configuration)(key: ScopedKey, result: Try[Seq[Attributed[File]]])(
-    implicit ctx: Extractor.Context): Unit = result match {
-    case Success(jars) => ifProjectAccepted(key.scope.project) { p =>
-      withProject { project =>
-        for {
-          module <- project.modules.find(_.id == p.name)
-          jar <- jars
-          lib = project.addLibrary(Library.Id.forUnmanagedJars(module.id, conf))
-        } {
-          logger.warn(s"Library '${lib.id}' adds '${jar.data}' to itself")
-          lib.addArtifact(Artifact.Binary(jar.data))
-          module.addDependency(Dependency.Library(lib.id, conf))
+    implicit ctx: Extractor.Context): Unit =
+    logOnWatchFailure(key, result) { jars =>
+      ifProjectAccepted(key.scope.project) { p =>
+        withProject { project =>
+          for {
+            module <- project.modules.find(_.id == p.name)
+            jar <- jars
+            lib = project.addLibrary(Library.Id.forUnmanagedJars(module.id, conf))
+            artifact = Artifact.Binary(jar.data)
+          } {
+            lib.addArtifact(artifact)
+            module.addDependency(Dependency.Library(lib.id, conf))
+            logger.info(s"Library '${lib.id}': Add '${artifact.file}' as '${artifact.getClass.getSimpleName}'")
+          }
         }
       }
     }
-    case Failure(exc) =>
-      logger.error(s"Failed retrieving '$key' key", exc)
-  }
 
   private def processInterProjectDependencies(implicit ctx: Extractor.Context): Unit =
     ctx.acceptedProjects.foreach { projectRef =>
@@ -53,8 +54,8 @@ abstract class InternalDependenciesExtractor extends ExtractorAdapter {
         } {
           withProject(_.modules.find(_.id == projectRef.id.name).foreach { module =>
             module.addDependency(Dependency.Module(dependency.project.name, configuration))
+            logger.info(s"Module '${module.id}': Depend on '${dependency.project.name}'")
           })
-          logger.warn(s"Module '${projectRef.id.name}' depends on '${dependency.project.name}'")
         }
       }
     }

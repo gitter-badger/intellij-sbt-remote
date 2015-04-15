@@ -16,19 +16,19 @@ import scala.util.{ Failure, Success, Try }
 abstract class ClassifiersExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
+    logger.info("Extracting sources and javadocs...")
     for {
       _ <- watchTaskKey[sbt.UpdateReport]("updateClassifiers")(updateWatcher)
     } yield Unit
   }
 
   private def updateWatcher(key: ScopedKey, result: Try[sbt.UpdateReport])(
-    implicit ctx: Extractor.Context): Unit = result match {
-    case Success(updateReport) => ifProjectAccepted(key.scope.project) { p =>
-      updateReport.configurations.foreach(_.modules.foreach(m => addSources(p.name, m)))
+    implicit ctx: Extractor.Context): Unit =
+    logOnWatchFailure(key, result) { updateReport =>
+      ifProjectAccepted(key.scope.project) { p =>
+        updateReport.configurations.foreach(_.modules.foreach(m => addSources(p.name, m)))
+      }
     }
-    case Failure(exc) =>
-      logger.error(s"Failed retrieving 'updateClassifiers' key", exc)
-  }
 
   private def addSources(moduleId: Module.Id, moduleReport: sbt.ModuleReport)(
     implicit ctx: Extractor.Context): Unit = {
@@ -50,7 +50,7 @@ abstract class ClassifiersExtractor extends ExtractorAdapter {
         artifact <- artifacts
       } {
         lib.addArtifact(artifact)
-        logger.warn(s"Library '${lib.id}' adds '${artifact.file}' to itself")
+        logger.info(s"Library '${lib.id}': Add '${artifact.file}' as '${artifact.getClass.getSimpleName}'")
       }
     }
   }

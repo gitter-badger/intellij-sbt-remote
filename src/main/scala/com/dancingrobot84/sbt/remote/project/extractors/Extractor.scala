@@ -10,14 +10,21 @@ import sbt.serialization._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future, Promise }
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 /**
  * @author: Nikolay Obedin
  * @since: 2/18/15.
  */
 trait Extractor {
-  def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription)
+  def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): Future[Unit]
+  def detach(): Unit
+
+  def attachOnce(client: SbtClient, projectRef: ProjectRef, logger: Logger): Future[Unit] = {
+    val f = attach(client, projectRef, logger)
+    f.onComplete(_ => detach)
+    f
+  }
 }
 
 trait Context {
@@ -60,7 +67,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
     implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context): Future[Seq[WatchResult[T]]] = {
     val allProjectKeys = ctx.acceptedProjects.map(pr => s"${pr.id.name}/$key")
     for {
-      allKeys <- Future.traverse(allProjectKeys)(ctx.client.lookupScopedKey).map(_.flatten.toSeq)
+      allKeys <- Future.traverse(allProjectKeys)(ctx.client.lookupScopedKey).map(_.flatten.distinct.toSeq)
       results <- Future.sequence(allKeys
         .filter(_.scope.project.exists(p => ctx.acceptedProjects.exists(_.id == p)))
         .map(keyProcessor))
@@ -81,7 +88,13 @@ abstract class ExtractorAdapter extends Extractor with Context {
   protected def logger(implicit ctx: Extractor.Context): Logger =
     ctx.logger
 
-  override def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription) = {
+  protected def logOnWatchFailure[T](key: ScopedKey, result: Try[T])(onSuccess: T => Unit)(
+    implicit ctx: Extractor.Context): Unit = result match {
+    case Success(value) => onSuccess(value)
+    case Failure(exc)   => ctx.logger.error(s"Failed retrieving $key")
+  }
+
+  override def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): Future[Unit] = {
     val initPromise = Promise[Unit]()
 
     addSubscription(client.watchBuild {
@@ -102,11 +115,11 @@ abstract class ExtractorAdapter extends Extractor with Context {
         }
     })
 
-    (initPromise.future, new Subscription {
-      override def cancel(): Unit =
-        subscriptions.foreach(_.cancel())
-    })
+    initPromise.future
   }
+
+  override def detach(): Unit =
+    subscriptions.foreach(_.cancel())
 }
 
 trait SynchronizedContext extends Context {

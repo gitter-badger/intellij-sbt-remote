@@ -11,7 +11,7 @@ import com.intellij.openapi.externalSystem.model.task.{ ExternalSystemTaskId, Ex
 import com.intellij.openapi.externalSystem.service.ImportCanceledException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
 import sbt.client.{ SbtConnector, SbtClient }
-import sbt.protocol.{ LogMessage, LogStdErr, LogStdOut, LogEvent }
+import sbt.protocol._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Future, Await, Promise }
@@ -64,8 +64,10 @@ object ProjectResolver {
         def onConnect(client: SbtClient): Unit = {
           client.handleEvents {
             case logE: LogEvent => logE.entry match {
-              case LogStdOut(_) | LogStdErr(_) | LogMessage(_, _) =>
-                logger.info(logE.entry.message)
+              case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
+                Log.warn(logE.entry.message)
+              case LogMessage(level, _) =>
+                Log.warn(s"[$level] ${logE.entry.message}")
               case _ =>
             }
             case _ =>
@@ -76,22 +78,32 @@ object ProjectResolver {
             var project: Project = new StatefulProject(projectFile.getCanonicalFile.toURI, projectFile.getName)
           }
 
-          val extractors =
+          val basicsExtractor = new BasicsExtractor with SynchronizedContext
+
+          val mandatoryExtractors = Seq(
+            new InternalDependenciesExtractor with SynchronizedContext,
+            new TasksExtractor with SynchronizedContext)
+
+          val optionalExtractors =
             if (isPreview)
-              Seq(new InternalDependenciesExtractor with SynchronizedContext)
+              Seq.empty
             else if (settings.resolveClassifiers)
-              Seq(new InternalDependenciesExtractor with SynchronizedContext,
-                new ExternalDependenciesExtractor with SynchronizedContext,
+              Seq(new ExternalDependenciesExtractor with SynchronizedContext,
                 new ClassifiersExtractor with SynchronizedContext)
             else
-              Seq(new InternalDependenciesExtractor with SynchronizedContext,
-                new ExternalDependenciesExtractor with SynchronizedContext)
+              Seq(new ExternalDependenciesExtractor with SynchronizedContext)
 
           val extraction = for {
-            _ <- (new BasicsExtractor with SynchronizedContext).attach(client, projectRef, logger)._1
-            _ <- Future.sequence(extractors.map(_.attach(client, projectRef, logger)._1))
-            _ <- (new TasksExtractor with SynchronizedContext).attach(client, projectRef, logger)._1
+            _ <- basicsExtractor.attachOnce(client, projectRef, logger)
+            _ <- Future.sequence(mandatoryExtractors.map(_.attachOnce(client, projectRef, logger)))
+            _ <- Future.sequence(optionalExtractors.map(_.attachOnce(client, projectRef, logger)))
           } yield Unit
+
+          extraction.onComplete { _ =>
+            basicsExtractor.detach()
+            mandatoryExtractors.foreach(_.detach())
+            optionalExtractors.foreach(_.detach())
+          }
 
           import DataNodeConversions._
           extraction.onComplete {
@@ -100,7 +112,7 @@ object ProjectResolver {
           }
         }
 
-      logger.info("Connecting to SBT server")
+      logger.info("Connecting to SBT server...")
 
       val subscription = sbtConnectorFor(projectPath).open(onConnect, { (reconnect, reason) =>
         if (reconnect)

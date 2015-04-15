@@ -15,23 +15,25 @@ import scala.util.{ Failure, Success, Try }
 abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
+    logger.info("Extracting external dependencies...")
     for {
       _ <- watchTaskKey[sbt.UpdateReport]("update")(updateWatcher)
     } yield Unit
   }
 
   private def updateWatcher(key: ScopedKey, result: Try[sbt.UpdateReport])(
-    implicit ctx: Extractor.Context): Unit = result match {
-    case Success(updateReport) => ifProjectAccepted(key.scope.project) { p =>
-      regroupConfigurationReports(updateReport.configurations).foreach {
-        case (moduleReport, confs) =>
-          confs.foreach(conf => addLibraryDependency(p.name, moduleReport, conf))
+    implicit ctx: Extractor.Context): Unit =
+    logOnWatchFailure(key, result) { updateReport =>
+      ifProjectAccepted(key.scope.project) { p =>
+        regroupConfigurationReports(updateReport.configurations).foreach {
+          case (moduleReport, confs) =>
+            confs.foreach(conf => addLibraryDependency(p.name, moduleReport, conf))
+        }
+        updateReport.configurations
+          .find(_.configuration == "scala-tool")
+          .foreach(c => setupScalaSdk(p.name, c.modules))
       }
-      updateReport.configurations.find(_.configuration == "scala-tool").foreach(c => setupScalaSdk(p.name, c.modules))
     }
-    case Failure(exc) =>
-      logger.error(s"Failed retrieving 'update' key", exc)
-  }
 
   private def regroupConfigurationReports(reports: Seq[sbt.ConfigurationReport]): Map[sbt.ModuleReport, Set[Configuration]] = {
     val result = mutable.HashMap.empty[sbt.ModuleReport, Set[Configuration]]
@@ -67,7 +69,7 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
           .getOrElse(project.addLibrary(libId.copy(internalVersion = lastVersion + 1)))
         artifacts.foreach { artifact =>
           libInProject.addArtifact(artifact)
-          logger.warn(s"Library '${libInProject.id}' adds '${artifact.file}' to itself")
+          logger.info(s"Library '${libInProject.id}': Add '${artifact.file}' as '${artifact.getClass.getSimpleName}'")
         }
         module.addDependency(Dependency.Library(libInProject.id, configuration))
       }
@@ -81,9 +83,7 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
     classpathModules.find(_.module.name == "scala-library").foreach { scalaLibModule =>
       val classpathFiles = classpathModules.flatMap(_.artifacts.map(_._2))
       val scalaSdk = ScalaSdk(scalaLibModule.module.revision, classpathFiles)
-      withProject { project =>
-        project.modules.find(_.id == moduleId).foreach(_.scalaSdk = Some(scalaSdk))
-      }
+      withProject(_.modules.find(_.id == moduleId).foreach(_.scalaSdk = Some(scalaSdk)))
     }
   }
 }

@@ -18,7 +18,8 @@ import scala.util.{ Failure, Success, Try }
  */
 abstract class BasicsExtractor extends ExtractorAdapter {
 
-  override def doAttach(implicit ctx: Extractor.Context): Future[Unit] =
+  override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
+    logger.info("Extracting basic settings...")
     for {
       _ <- watchSettingKey[File]("baseDirectory")(baseDirWatcher)
       _ <- watchSettingKey[String]("name")(nameWatcher)
@@ -34,74 +35,71 @@ abstract class BasicsExtractor extends ExtractorAdapter {
       _ <- watchSettingKey[File]("test:classDirectory")(pathWatcher(Path.TestOutput))
       _ <- watchSettingKey[Seq[String]]("scalacOptions")(scalacOptionsWatcher)
     } yield Unit
-
-  private def baseDirWatcher(key: ScopedKey, result: Try[File])(implicit ctx: Extractor.Context): Unit = result match {
-    case Success(baseDir) => ifProjectAccepted(key.scope.project) { p =>
-      withProject { project =>
-        project.addModule(p.name, baseDir)
-        if (baseDir == new File(project.base))
-          project.name = p.name
-      }
-      logger.warn(s"Module '${p.name}' sets '$baseDir' as baseDirectory")
-    }
-    case Failure(exc) =>
-      logger.error("Failed retrieving 'baseDirectory' key", exc)
   }
 
-  private def nameWatcher(key: ScopedKey, result: Try[String])(implicit ctx: Extractor.Context): Unit = result match {
-    case Success(name) => ifProjectAccepted(key.scope.project) { p =>
-      withProject { project =>
-        project.modules.find(_.id == p.name).foreach { module =>
-          module.name = name
-          if (project.base == module.base.toURI)
-            project.name = name
+  private def baseDirWatcher(key: ScopedKey, result: Try[File])(implicit ctx: Extractor.Context): Unit =
+    logOnWatchFailure(key, result) { baseDir =>
+      ifProjectAccepted(key.scope.project) { p =>
+        withProject { project =>
+          project.addModule(p.name, baseDir)
+          if (baseDir == new File(project.base))
+            project.name = p.name
+          logger.info(s"Module '${p.name}': Set 'ContentRoot' to '$baseDir'")
         }
       }
-      logger.warn(s"Module '${p.name}' changes its name to '$name'")
     }
-    case Failure(exc) =>
-      logger.error("Failed retrieving 'name' key", exc)
-  }
 
-  private def pathsWatcher(pathTrans: File => Path)(key: ScopedKey, result: Try[Seq[File]])(
-    implicit ctx: Extractor.Context): Unit = result match {
-    case Success(paths) => ifProjectAccepted(key.scope.project) { p =>
-      paths.foreach { path =>
+  private def nameWatcher(key: ScopedKey, result: Try[String])(implicit ctx: Extractor.Context): Unit =
+    logOnWatchFailure(key, result) { name =>
+      ifProjectAccepted(key.scope.project) { p =>
         withProject { project =>
           project.modules.find(_.id == p.name).foreach { module =>
-            if (FileUtil.isAncestor(module.base, path, false))
-              module.addPath(pathTrans(path))
-            else
-              logger.warn(s"'$path' is not added because it is outside of module's '${p.name}' base directory")
+            module.name = name
+            if (project.base == module.base.toURI)
+              project.name = name
+            logger.info(s"Module '${module.id}': Set 'Name' to '$name'")
           }
         }
-        logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
       }
     }
-    case Failure(exc) =>
-      logger.error(s"Failed retrieving '$key' key", exc)
-  }
+
+  private def pathsWatcher(pathTrans: File => Path)(key: ScopedKey, result: Try[Seq[File]])(
+    implicit ctx: Extractor.Context): Unit =
+    logOnWatchFailure(key, result) { paths =>
+      ifProjectAccepted(key.scope.project) { p =>
+        paths.foreach { path =>
+          withProject { project =>
+            project.modules.find(_.id == p.name).foreach { module =>
+              if (FileUtil.isAncestor(module.base, path, false)) {
+                module.addPath(pathTrans(path))
+                logger.info(s"Module '${module.id}': Add '$path' to '${pathTrans(path).getClass.getSimpleName}'")
+              } else {
+                logger.warn(s"'$path' is not added because it is outside of module's '${module.id}' content root")
+              }
+            }
+          }
+        }
+      }
+    }
 
   private def pathWatcher(pathTrans: File => Path)(key: ScopedKey, result: Try[File])(
-    implicit ctx: Extractor.Context): Unit = result match {
-    case Success(path) => ifProjectAccepted(key.scope.project) { p =>
-      logger.warn(s"Module '${p.name}' adds '$path' as '${pathTrans(path).getClass.getSimpleName}'")
-      withProject { project =>
-        project.modules.find(_.id == p.name).foreach(_.addPath(pathTrans(path)))
+    implicit ctx: Extractor.Context): Unit =
+    logOnWatchFailure(key, result) { path =>
+      ifProjectAccepted(key.scope.project) { p =>
+        logger.info(s"Module '${p.name}': Add '$path' to '${pathTrans(path).getClass.getSimpleName}'")
+        withProject { project =>
+          project.modules.find(_.id == p.name).foreach(_.addPath(pathTrans(path)))
+        }
       }
     }
-    case Failure(exc) =>
-      logger.error(s"Failed retrieving '$key' key", exc)
-  }
 
   private def scalacOptionsWatcher(key: ScopedKey, result: Try[Seq[String]])(
-    implicit ctx: Extractor.Context): Unit = result match {
-    case Success(options) => ifProjectAccepted(key.scope.project) { p =>
-      withProject { project =>
-        project.modules.find(_.id == p.name).foreach(m => m.scalacOptions = options)
+    implicit ctx: Extractor.Context): Unit =
+    logOnWatchFailure(key, result) { options =>
+      ifProjectAccepted(key.scope.project) { p =>
+        withProject { project =>
+          project.modules.find(_.id == p.name).foreach(m => m.scalacOptions = options)
+        }
       }
     }
-    case Failure(exc) =>
-      logger.error(s"Failed retrieving '$key' key", exc)
-  }
 }

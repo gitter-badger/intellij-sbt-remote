@@ -41,7 +41,8 @@ package object remote {
                 onError(reconnecting, message)
                 if (!reconnecting) connectorsPool.synchronized {
                   connectorsPool.remove(path)
-                } else openedClient.synchronized {
+                }
+                else openedClient.synchronized {
                   openedClient.foreach(_.close)
                   openedClient = None
                 }
