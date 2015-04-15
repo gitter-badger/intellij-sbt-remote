@@ -88,9 +88,9 @@ object ProjectResolver {
                 new ExternalDependenciesExtractor with SynchronizedContext)
 
           val extraction = for {
-            _ <- (new BasicsExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
-            _ <- Future.sequence(extractors.map(_.attach(client, projectRef, Log)._1))
-            _ <- (new TasksExtractor with SynchronizedContext).attach(client, projectRef, Log)._1
+            _ <- (new BasicsExtractor with SynchronizedContext).attach(client, projectRef, logger)._1
+            _ <- Future.sequence(extractors.map(_.attach(client, projectRef, logger)._1))
+            _ <- (new TasksExtractor with SynchronizedContext).attach(client, projectRef, logger)._1
           } yield Unit
 
           import DataNodeConversions._
