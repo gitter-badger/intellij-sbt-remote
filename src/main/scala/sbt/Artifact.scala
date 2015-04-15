@@ -19,7 +19,6 @@ object Artifact {
     val stringTag = implicitly[FastTypeTag[String]]
     val optionStringTag = implicitly[FastTypeTag[Option[String]]]
     val vectorConfigurationTag = implicitly[FastTypeTag[Vector[Configuration]]]
-    val stringStringMapTag = implicitly[FastTypeTag[Map[String, String]]]
     def pickle(a: Artifact, builder: PBuilder): Unit = {
       builder.pushHints()
       builder.hintTag(tag)
