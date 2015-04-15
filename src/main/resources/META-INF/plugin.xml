@@ -18,6 +18,8 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.ExternalSystemManager"/>
+        <externalSystemTaskNotificationListener
+                implementation="com.dancingrobot84.sbt.remote.external.TaskNotificationListener"/>
 
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.SystemSettings"/>
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.LocalSettings"/>

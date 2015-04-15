@@ -34,8 +34,11 @@ class ProjectResolver
                                   settings: ExecutionSettings,
                                   listener: ExternalSystemTaskNotificationListener): DataNode[ProjectData] = {
     val logger = new Logger {
-      def log(msg: String, level: Logger.Level, cause: Option[Throwable]): Unit =
+      def log(msg: String, level: Logger.Level, cause: Option[Throwable]): Unit = {
         listener.onStatusChange(new ExternalSystemTaskNotificationEvent(id, msg))
+        if (level == Logger.Level.Warn || level == Logger.Level.Error)
+          listener.onTaskOutput(id, msg, false)
+      }
     }
 
     executor = Some(new ResolutionExecutor(projectPath, settings, isPreview, logger))
