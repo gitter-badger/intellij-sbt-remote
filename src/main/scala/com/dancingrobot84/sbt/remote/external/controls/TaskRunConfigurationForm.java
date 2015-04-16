@@ -2,10 +2,9 @@ package com.dancingrobot84.sbt.remote.external.controls;
 
 import com.dancingrobot84.sbt.remote.Bundle;
 import com.dancingrobot84.sbt.remote.external.ExternalSystemManager;
+import com.dancingrobot84.sbt.remote.external.package$;
 import com.intellij.openapi.externalSystem.service.ui.ExternalProjectPathField;
 import com.intellij.openapi.project.Project;
-
-import com.dancingrobot84.sbt.remote.external.package$;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.AnActionButton;
 import com.intellij.ui.AnActionButtonRunnable;

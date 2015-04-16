@@ -1,15 +1,10 @@
 package com.dancingrobot84.sbt.remote.applicationComponents
 
-import java.io.File
-import java.util.concurrent.locks.Lock
-
 import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager.ConnectionListener
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ApplicationComponent
-import sbt.client._
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**

@@ -2,7 +2,7 @@ package com.dancingrobot84.sbt.remote
 package external
 package controls
 
-import com.intellij.openapi.externalSystem.util.{ PaintAwarePanel, ExternalSystemSettingsControl }
+import com.intellij.openapi.externalSystem.util.{ ExternalSystemSettingsControl, PaintAwarePanel }
 
 /**
  * @author Nikolay Obedin

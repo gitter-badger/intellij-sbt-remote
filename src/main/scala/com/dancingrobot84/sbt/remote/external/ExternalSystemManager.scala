@@ -6,9 +6,8 @@ import java.net.URL
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.ide.actions.OpenProjectFileChooserDescriptor
 import com.intellij.openapi.options.Configurable
-import com.intellij.openapi.externalSystem
-import com.intellij.openapi.{ project => idea }
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.{ externalSystem, project => idea }
 
 /**
  * @author Nikolay Obedin

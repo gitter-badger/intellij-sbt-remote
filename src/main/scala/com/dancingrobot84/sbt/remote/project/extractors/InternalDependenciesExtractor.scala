@@ -10,7 +10,7 @@ import sbt.serialization._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 /**
  * @author: Nikolay Obedin

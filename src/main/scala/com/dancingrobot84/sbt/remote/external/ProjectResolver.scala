@@ -6,17 +6,18 @@ import java.io.File
 import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
 import com.dancingrobot84.sbt.remote.project.extractors._
 import com.dancingrobot84.sbt.remote.project.structure.{ Project, ProjectRef, StatefulProject }
-import com.intellij.openapi.externalSystem.model.{ ExternalSystemException, DataNode }
 import com.intellij.openapi.externalSystem.model.project.ProjectData
 import com.intellij.openapi.externalSystem.model.task.{ ExternalSystemTaskId, ExternalSystemTaskNotificationEvent, ExternalSystemTaskNotificationListener }
+import com.intellij.openapi.externalSystem.model.{ DataNode, ExternalSystemException }
 import com.intellij.openapi.externalSystem.service.ImportCanceledException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
-import sbt.client.{ SbtConnector, SbtClient }
+import sbt.client.SbtClient
 import sbt.protocol._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Future, Await, Promise }
-import scala.util.{ Try, Failure, Success }
+import scala.concurrent.{ Await, Future, Promise }
+import scala.util.{ Failure, Success, Try }
 
 /**
  * @author Nikolay Obedin

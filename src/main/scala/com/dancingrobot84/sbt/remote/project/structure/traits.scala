@@ -2,6 +2,7 @@ package com.dancingrobot84.sbt.remote.project.structure
 
 import java.io.File
 import java.net.URI
+
 import sbt.ModuleID
 
 /**

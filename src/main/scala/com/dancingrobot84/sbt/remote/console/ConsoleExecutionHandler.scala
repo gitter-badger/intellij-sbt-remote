@@ -1,12 +1,12 @@
 package com.dancingrobot84.sbt.remote.console
 
 import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
-import com.intellij.execution.console.{ LanguageConsoleView, BaseConsoleExecuteActionHandler }
+import com.intellij.execution.console.{ BaseConsoleExecuteActionHandler, LanguageConsoleView }
 import com.intellij.openapi.project.Project
 import sbt.protocol.{ ExecutionFailure, ExecutionSuccess }
 
-import scala.concurrent.Promise
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Promise
 
 /**
  * @author Nikolay Obedin

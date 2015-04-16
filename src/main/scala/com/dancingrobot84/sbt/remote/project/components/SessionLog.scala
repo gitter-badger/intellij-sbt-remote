@@ -9,7 +9,6 @@ import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionMa
 import com.dancingrobot84.sbt.remote.external.SystemSettings
 import com.intellij.openapi.components.AbstractProjectComponent
 import com.intellij.openapi.project.Project
-import com.intellij.ui.content.MessageView
 import sbt.client.SbtClient
 import sbt.protocol._
 

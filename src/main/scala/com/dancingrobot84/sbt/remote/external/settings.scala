@@ -6,10 +6,11 @@ import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutio
 import com.intellij.openapi.externalSystem.service.project.PlatformFacade
 import com.intellij.openapi.externalSystem.settings._
 import com.intellij.openapi.project.Project
-import com.intellij.util.xmlb.annotations.AbstractCollection
-import scala.beans.BeanProperty
 import com.intellij.util.containers.ContainerUtilRt
 import com.intellij.util.messages.{ Topic => ExternalSystemTopic }
+import com.intellij.util.xmlb.annotations.AbstractCollection
+
+import scala.beans.BeanProperty
 
 /**
  * @author Nikolay Obedin

@@ -3,6 +3,7 @@ package project
 package extractors
 
 import java.io.File
+
 import com.dancingrobot84.sbt.remote.project.structure.Path
 import com.intellij.openapi.util.io.FileUtil
 import sbt.protocol.ScopedKey
@@ -10,7 +11,7 @@ import sbt.serialization._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 /**
  * @author: Nikolay Obedin

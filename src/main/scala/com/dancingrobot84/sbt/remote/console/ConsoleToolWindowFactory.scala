@@ -4,7 +4,6 @@ package console
 import java.awt.BorderLayout
 import javax.swing.JPanel
 
-import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
 import com.dancingrobot84.sbt.remote.project.components.SessionLog
 import com.intellij.execution.console._
 import com.intellij.execution.impl.ConsoleViewImpl.ClearAllAction
@@ -15,10 +14,6 @@ import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.{ ToolWindow, ToolWindowFactory }
-import sbt.protocol.{ ExecutionFailure, ExecutionSuccess }
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Promise
 
 /**
  * @author Nikolay Obedin

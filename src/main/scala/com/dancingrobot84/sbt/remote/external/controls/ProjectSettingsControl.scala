@@ -5,8 +5,8 @@ package controls
 import javax.swing.JCheckBox
 
 import com.intellij.openapi.externalSystem.service.settings.AbstractExternalProjectSettingsControl
-import com.intellij.openapi.externalSystem.util.PaintAwarePanel
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil._
+import com.intellij.openapi.externalSystem.util.PaintAwarePanel
 
 /**
  * @author Nikolay Obedin

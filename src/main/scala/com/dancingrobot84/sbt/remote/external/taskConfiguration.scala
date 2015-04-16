@@ -1,11 +1,11 @@
 package com.dancingrobot84.sbt.remote
 package external
 
-import javax.swing.{ JComponent, Icon }
+import javax.swing.{ Icon, JComponent }
 
 import com.dancingrobot84.sbt.remote.external.controls.TaskRunConfigurationForm
-import com.intellij.execution.configurations.{ RunConfiguration, ConfigurationFactory }
-import com.intellij.openapi.externalSystem.service.execution.{ ExternalSystemRunConfiguration, AbstractExternalSystemRuntimeConfigurationProducer, AbstractExternalSystemTaskConfigurationType }
+import com.intellij.execution.configurations.{ ConfigurationFactory, RunConfiguration }
+import com.intellij.openapi.externalSystem.service.execution.{ AbstractExternalSystemRuntimeConfigurationProducer, AbstractExternalSystemTaskConfigurationType, ExternalSystemRunConfiguration }
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
