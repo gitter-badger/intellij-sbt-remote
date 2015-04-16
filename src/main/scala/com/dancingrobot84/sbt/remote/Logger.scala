@@ -41,9 +41,9 @@ object Logger {
 
     def fromString(level: String): Level = level.toLowerCase match {
       case "debug" => Level.Debug
-      case "warn" => Level.Warn
+      case "warn"  => Level.Warn
       case "error" => Level.Error
-      case _ => Level.Info
+      case _       => Level.Info
     }
   }
 

@@ -12,6 +12,7 @@ import com.intellij.openapi.actionSystem._
 import com.intellij.openapi.application.ex.ApplicationManagerEx
 import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.{ ToolWindow, ToolWindowFactory }
 import sbt.protocol.{ ExecutionFailure, ExecutionSuccess }
 
@@ -63,6 +64,7 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
 
 class ConsoleView(project: Project) extends LanguageConsoleImpl(project, "SBT Remote REPL", PlainTextLanguage.INSTANCE) {
   getConsoleEditor.setOneLineMode(true)
+  Disposer.register(project, this)
 
   import SessionLog._
   SessionLog(project).foreach { listener =>
@@ -85,8 +87,6 @@ class ConsoleView(project: Project) extends LanguageConsoleImpl(project, "SBT Re
           }
         })
       }
-
-      override def onRemoval(): Unit = if (!project.isOpen) dispose()
     })
   }
 }
@@ -99,6 +99,8 @@ class ConsoleExecutionHandler(project: Project) extends BaseConsoleExecuteAction
   def cancel(): Unit = cancelPromise.foreach(_.tryFailure(null))
 
   def isCancellable(): Boolean = cancelPromise.fold(false)(!_.isCompleted)
+
+  override def isEmptyCommandExecutionAllowed: Boolean = false
 
   override def execute(text: String, console: LanguageConsoleView): Unit = {
     isTaskDonePromise = Some(Promise())

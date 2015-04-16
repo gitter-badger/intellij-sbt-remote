@@ -37,10 +37,8 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) {
     listeners.add(listener)
   }
 
-  def removeLogListener(listener: LogListener): Unit = {
-    listener.onRemoval()
+  def removeLogListener(listener: LogListener): Unit =
     listeners.remove(listener)
-  }
 
   private def onConnect(client: SbtClient): Unit = {
     client.handleEvents {
@@ -80,6 +78,5 @@ object SessionLog {
 
   trait LogListener {
     def onMessage(msg: Message): Unit
-    def onRemoval(): Unit
   }
 }
