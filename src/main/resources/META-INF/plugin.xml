@@ -10,6 +10,12 @@
 
     <depends>org.intellij.scala</depends>
 
+    <application-components>
+        <component>
+            <implementation-class>com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager</implementation-class>
+        </component>
+    </application-components>
+
     <project-components>
         <component>
             <implementation-class>com.dancingrobot84.sbt.remote.project.components.SessionLog</implementation-class>

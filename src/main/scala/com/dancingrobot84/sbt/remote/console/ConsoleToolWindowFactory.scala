@@ -4,6 +4,7 @@ package console
 import java.awt.BorderLayout
 import javax.swing.JPanel
 
+import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
 import com.dancingrobot84.sbt.remote.project.components.SessionLog
 import com.intellij.execution.console._
 import com.intellij.execution.impl.ConsoleViewImpl.ClearAllAction
@@ -107,7 +108,7 @@ class ConsoleExecutionHandler(project: Project) extends BaseConsoleExecuteAction
     cancelPromise = Some(Promise())
 
     console.setEditable(false)
-    val subscription = sbtConnectorFor(project.getBasePath).open({ client =>
+    val subscription = SbtServerConnectionManager().getSbtConnectorFor(project.getBasePath).open({ client =>
       for {
         id0 <- client.requestExecution(text, None)
       } {

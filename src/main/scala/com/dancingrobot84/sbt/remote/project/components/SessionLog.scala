@@ -4,6 +4,8 @@ package components
 
 import java.util.concurrent.CopyOnWriteArrayList
 
+import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
+import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager.ConnectionListener
 import com.dancingrobot84.sbt.remote.external.SystemSettings
 import com.intellij.openapi.components.AbstractProjectComponent
 import com.intellij.openapi.project.Project
@@ -18,7 +20,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
  * @author Nikolay Obedin
  * @since 4/2/15.
  */
-class SessionLog(project: Project) extends AbstractProjectComponent(project) {
+class SessionLog(project: Project) extends AbstractProjectComponent(project) { self =>
 
   import SessionLog._
 
@@ -26,7 +28,13 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) {
   private val listeners = new CopyOnWriteArrayList[LogListener]
 
   override def projectOpened(): Unit = Option(SystemSettings(project)).foreach { settings =>
-    sbtConnectorFor(project.getBasePath).open(onConnect, onFailure)
+    val connectionManager = SbtServerConnectionManager()
+    connectionManager.addConnectionListener(project.getBasePath, new ConnectionListener {
+      override def onConnect: Unit =
+        connectionManager.getSbtConnectorFor(project.getBasePath).open(self.onConnect, self.onFailure)
+      override def onDisconnect: Unit = {}
+    })
+    connectionManager.ensureConnectionFor(project.getBasePath)
   }
 
   override def projectClosed(): Unit =
@@ -40,27 +48,28 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) {
   def removeLogListener(listener: LogListener): Unit =
     listeners.remove(listener)
 
+  private def addMessage(msg: Message): Unit = {
+    log.add(msg)
+    listeners.asScala.foreach(_.onMessage(msg))
+  }
+
   private def onConnect(client: SbtClient): Unit = {
     client.handleEvents {
       case logE: LogEvent if !logE.entry.message.startsWith("Read from stdout:") =>
         logE.entry match {
           case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
-            val msg = Message.Stdout(logE.entry.message)
-            log.add(msg)
-            listeners.asScala.foreach(_.onMessage(msg))
+            addMessage(Message.Stdout(logE.entry.message))
           case LogMessage("debug", _) => // ignore
           case LogMessage(level, message) =>
-            val msg = Message.Log(Logger.Level.fromString(level), message)
-            log.add(msg)
-            listeners.asScala.foreach(_.onMessage(msg))
+            addMessage(Message.Log(Logger.Level.fromString(level), message))
           case _ => // ignore
         }
       case _ => // ignore
     }
   }
 
-  private def onFailure(isReconnecting: Boolean, cause: String): Unit = {
-  }
+  private def onFailure(isReconnecting: Boolean, cause: String): Unit =
+    addMessage(Message.Log(Logger.Level.Warn, cause))
 }
 
 object SessionLog {

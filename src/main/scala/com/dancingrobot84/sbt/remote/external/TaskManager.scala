@@ -2,6 +2,7 @@ package com.dancingrobot84.sbt.remote
 package external
 
 import com.dancingrobot84.sbt.remote.Logger.Level
+import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.model.task.{ ExternalSystemTaskId, ExternalSystemTaskNotificationListener }
 import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
@@ -92,7 +93,7 @@ object TaskManager {
     private val shouldCancelPromise = Promise[Unit]()
 
     def run(): Future[Unit] = {
-      val connector = sbtConnectorFor(projectPath)
+      val connector = SbtServerConnectionManager().getSbtConnectorFor(projectPath)
 
         def onConnect(client: SbtClient): Unit = {
           var currentTask: Option[(Long, String)] = None

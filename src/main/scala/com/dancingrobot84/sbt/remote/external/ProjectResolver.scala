@@ -3,6 +3,7 @@ package external
 
 import java.io.File
 
+import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
 import com.dancingrobot84.sbt.remote.project.extractors._
 import com.dancingrobot84.sbt.remote.project.structure.{ Project, ProjectRef, StatefulProject }
 import com.intellij.openapi.externalSystem.model.{ ExternalSystemException, DataNode }
@@ -117,7 +118,7 @@ object ProjectResolver {
 
       logger.info("Connecting to SBT server...")
 
-      val subscription = sbtConnectorFor(projectPath).open(onConnect, { (reconnect, reason) =>
+      val subscription = SbtServerConnectionManager().getSbtConnectorFor(projectPath).open(onConnect, { (reconnect, reason) =>
         if (reconnect)
           logger.warn(reason)
         else
