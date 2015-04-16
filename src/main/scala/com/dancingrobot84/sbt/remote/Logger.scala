@@ -38,6 +38,13 @@ object Logger {
     case object Info extends Level
     case object Warn extends Level
     case object Error extends Level
+
+    def fromString(level: String): Level = level.toLowerCase match {
+      case "debug" => Level.Debug
+      case "warn" => Level.Warn
+      case "error" => Level.Error
+      case _ => Level.Info
+    }
   }
 
   implicit def ideaLogger2Logger(logger: diagnostic.Logger): Logger = new Logger {

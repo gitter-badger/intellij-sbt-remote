@@ -7,6 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import com.dancingrobot84.sbt.remote.external.SystemSettings
 import com.intellij.openapi.components.AbstractProjectComponent
 import com.intellij.openapi.project.Project
+import com.intellij.ui.content.MessageView
 import sbt.client.SbtClient
 import sbt.protocol._
 
@@ -17,9 +18,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
  * @author Nikolay Obedin
  * @since 4/2/15.
  */
-class SessionListener(project: Project) extends AbstractProjectComponent(project) {
+class SessionLog(project: Project) extends AbstractProjectComponent(project) {
 
-  import SessionListener._
+  import SessionLog._
 
   private val log = new CopyOnWriteArrayList[Message]
   private val listeners = new CopyOnWriteArrayList[LogListener]
@@ -49,16 +50,9 @@ class SessionListener(project: Project) extends AbstractProjectComponent(project
             val msg = Message.Stdout(logE.entry.message)
             log.add(msg)
             listeners.asScala.foreach(_.onMessage(msg))
-          case LogMessage("info", _) =>
-            val msg = Message.Log(Logger.Level.Info, logE.entry.message)
-            log.add(msg)
-            listeners.asScala.foreach(_.onMessage(msg))
-          case LogMessage("warn", _) =>
-            val msg = Message.Log(Logger.Level.Warn, logE.entry.message)
-            log.add(msg)
-            listeners.asScala.foreach(_.onMessage(msg))
-          case LogMessage("error", _) =>
-            val msg = Message.Log(Logger.Level.Error, logE.entry.message)
+          case LogMessage("debug", _) => // ignore
+          case LogMessage(level, message) =>
+            val msg = Message.Log(Logger.Level.fromString(level), message)
             log.add(msg)
             listeners.asScala.foreach(_.onMessage(msg))
           case _ => // ignore
@@ -71,9 +65,9 @@ class SessionListener(project: Project) extends AbstractProjectComponent(project
   }
 }
 
-object SessionListener {
-  def apply(project: Project): Option[SessionListener] =
-    Option(project.getComponent(classOf[SessionListener]))
+object SessionLog {
+  def apply(project: Project): Option[SessionLog] =
+    Option(project.getComponent(classOf[SessionLog]))
 
   sealed trait Message {
     val message: String

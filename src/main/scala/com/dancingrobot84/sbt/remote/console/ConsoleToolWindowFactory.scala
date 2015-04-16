@@ -4,8 +4,7 @@ package console
 import java.awt.BorderLayout
 import javax.swing.JPanel
 
-import com.dancingrobot84.sbt.remote.project.components.SessionListener
-import com.dancingrobot84.sbt.remote.project.components.SessionListener.LogListener
+import com.dancingrobot84.sbt.remote.project.components.SessionLog
 import com.intellij.execution.console._
 import com.intellij.execution.impl.ConsoleViewImpl.ClearAllAction
 import com.intellij.execution.{ ui => UI }
@@ -65,9 +64,9 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
 class ConsoleView(project: Project) extends LanguageConsoleImpl(project, "SBT Remote REPL", PlainTextLanguage.INSTANCE) {
   getConsoleEditor.setOneLineMode(true)
 
-  SessionListener(project).foreach { listener =>
+  import SessionLog._
+  SessionLog(project).foreach { listener =>
     listener.addLogListener(new LogListener {
-      import SessionListener._
       override def onMessage(message: Message): Unit = {
         ApplicationManagerEx.getApplicationEx.invokeLater(new Runnable {
           override def run(): Unit = {
