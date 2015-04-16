@@ -27,7 +27,7 @@ class TaskManager
 
   import TaskManager._
 
-  private var executor: Option[TasksExecutor] = None
+  private var executor: Option[Executor] = None
 
   override def executeTasks(id: ExternalSystemTaskId,
                             taskNames: java.util.List[String],
@@ -59,7 +59,7 @@ class TaskManager
     if (!runAsIs && moduleName.isEmpty)
       throw new ExternalSystemException(Bundle("sbt.remote.task.projectScopeIsNotSet"))
 
-    executor = Some(new TasksExecutor(projectPath, moduleName, taskNames.asScala, settings, logger))
+    executor = Some(new Executor(projectPath, moduleName, taskNames.asScala, settings, logger))
     executor.foreach(e => Await.ready(e.run(), Duration.Inf))
   }
 
@@ -79,7 +79,7 @@ class TaskManager
 
 object TaskManager {
 
-  final class TasksExecutor(projectPath: String,
+  final class Executor(projectPath: String,
                             moduleName: Option[String],
                             taskNames: Seq[String],
                             settings: ExecutionSettings,

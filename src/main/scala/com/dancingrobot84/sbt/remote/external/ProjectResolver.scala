@@ -28,7 +28,7 @@ class ProjectResolver
 
   import ProjectResolver._
 
-  private var executor: Option[ResolutionExecutor] = None
+  private var executor: Option[Executor] = None
 
   override def resolveProjectInfo(id: ExternalSystemTaskId,
                                   projectPath: String,
@@ -43,7 +43,7 @@ class ProjectResolver
       }
     }
 
-    executor = Some(new ResolutionExecutor(projectPath, settings, isPreview, logger))
+    executor = Some(new Executor(projectPath, settings, isPreview, logger))
     executor.fold(null.asInstanceOf[DataNode[ProjectData]])(e => Await.result(e.run(), Duration.Inf))
   }
 
@@ -53,7 +53,7 @@ class ProjectResolver
 }
 
 object ProjectResolver {
-  final class ResolutionExecutor(projectPath: String,
+  final class Executor(projectPath: String,
                                  settings: ExecutionSettings,
                                  isPreview: Boolean,
                                  logger: Logger) {

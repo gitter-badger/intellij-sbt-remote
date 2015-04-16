@@ -45,8 +45,6 @@ class ConsoleExecutionHandler(project: Project) extends BaseConsoleExecuteAction
           case _ => // do nothing
         }
       }
-    }, { (_, _) =>
-      Unit
     })
 
     isTaskDonePromise.foreach(_.future.onComplete { _ =>

@@ -42,7 +42,7 @@ class StartStopServerActionGroup(project: Project) extends DefaultActionGroup(nu
       e.getPresentation.setEnabled(!isServerRunning.get)
 
     override def actionPerformed(e: AnActionEvent): Unit = {
-      SbtServerConnectionManager().getSbtConnectorFor(project.getBasePath)
+      SbtServerConnectionManager().ensureConnectionFor(project.getBasePath)
     }
   })
 
@@ -56,7 +56,7 @@ class StartStopServerActionGroup(project: Project) extends DefaultActionGroup(nu
       val connector = SbtServerConnectionManager().getSbtConnectorFor(project.getBasePath)
       connector.open({ client =>
         client.requestSelfDestruct()
-      }, { (_, _) => Unit })
+      })
       connector.close()
     }
   })

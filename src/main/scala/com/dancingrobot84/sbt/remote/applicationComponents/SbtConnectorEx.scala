@@ -7,6 +7,9 @@ import sbt.client._
 import scala.concurrent.ExecutionContext
 
 /**
+ * Extended version of SbtConnector. Additions include:
+ *    - Reusing already opened client. Prevents from getting ChannelInUse exception
+ *    - `isConnected` method
  * @author Nikolay Obedin
  * @since 4/16/15.
  */
@@ -39,5 +42,8 @@ class SbtConnectorEx(path: String) extends SbtConnector {
   override def close(): Unit = delegate.close
 
   def isConnected: Boolean = openedClient.synchronized(openedClient.isDefined)
+
+  def open(onConnect: (SbtClient) => Unit)(implicit ex: ExecutionContext): Subscription =
+    open(onConnect, (_, _) => Unit)
 }
 

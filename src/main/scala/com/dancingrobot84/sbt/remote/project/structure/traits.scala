@@ -6,10 +6,20 @@ import java.net.URI
 import sbt.ModuleID
 
 /**
+ * Simplified representation of IDEA's project structure.
+ * This layer of abstraction is, on the one hand, easier than ExternalSystem's DataNodes
+ * and, on the other, allows to be completely independent from ExternalSystem's architecture.
+ *
  * @author: Nikolay Obedin
  * @since: 2/12/15.
  */
 
+
+/**
+ * Reference to a project
+ * Used in project transformation in extractors to avoid leaking of project's real reference
+ * to a third party code
+ */
 trait ProjectRef {
   var project: Project
 }
@@ -63,9 +73,18 @@ trait Library {
 }
 
 object Library {
+
+  /**
+   * `organization`, `name` and `version` have the same meaning as in Maven or Ivy artifacts.
+   * `internalVersion` field is used to distinguish dependencies that have equal coordinates
+   * but different sets of artifacts (usually libraries with different classifiers).
+   */
   case class Id(organization: String, name: String, version: String, internalVersion: Int) {
     override def toString = s"$organization:$name:$version:$internalVersion"
 
+    /**
+     * Compare only Maven coordinates, without `internalVersion` field
+     */
     def ~=(otherId: Library.Id) =
       organization == otherId.organization &&
         name == otherId.name &&

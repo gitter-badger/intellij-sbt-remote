@@ -13,6 +13,8 @@ import org.jetbrains.plugins.scala.project.Version
 import org.jetbrains.sbt.project.data.ScalaSdkData
 
 /**
+ * Implicit conversions from project.structure.traits to External System's DataNodes
+ *
  * @author: Nikolay Obedin
  * @since: 12/03/2015.
  */

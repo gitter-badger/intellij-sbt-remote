@@ -16,6 +16,9 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
+ * Stores each message sent by sbt server either to log (except "debug") or to stdout/stderr while project is open.
+ * Log is persistent during multiple reconnections to sbt server, but will be erased after project is closed.
+ *
  * @author Nikolay Obedin
  * @since 4/2/15.
  */
@@ -39,6 +42,11 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
   override def projectClosed(): Unit =
     listeners.asScala.foreach(removeLogListener)
 
+
+  /**
+   * Add listener to session log.
+   * Listener will receive all previous messages on adding.
+   */
   def addLogListener(listener: LogListener): Unit = {
     log.asScala.foreach(listener.onMessage)
     listeners.add(listener)
@@ -46,6 +54,7 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
 
   def removeLogListener(listener: LogListener): Unit =
     listeners.remove(listener)
+
 
   private def addMessage(msg: Message): Unit = {
     log.add(msg)

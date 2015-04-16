@@ -8,6 +8,8 @@ import java.net.URI
 import scala.collection.mutable
 
 /**
+ * Implementation of project.structure.traits that just stores information inside
+ *
  * @author: Nikolay Obedin
  * @since: 2/20/15.
  */
