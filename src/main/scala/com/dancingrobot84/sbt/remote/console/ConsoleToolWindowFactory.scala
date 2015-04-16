@@ -36,6 +36,7 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
     val executionHandler = new ConsoleExecutionHandler(project)
 
     addAction(new ConsoleExecuteAction(consoleView, executionHandler))
+    new ConsoleHistoryController(IdeConsoleRootType.getInstance, null, consoleView).install()
 
     addAction(new AnAction() {
       copyFrom(ActionManager.getInstance().getAction(IdeActions.ACTION_STOP_PROGRAM))
