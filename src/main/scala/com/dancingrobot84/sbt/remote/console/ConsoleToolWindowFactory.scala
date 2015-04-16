@@ -66,7 +66,7 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
   }
 }
 
-class ConsoleView(project: Project) extends LanguageConsoleImpl(project, "SBT Remote REPL", PlainTextLanguage.INSTANCE) {
+class ConsoleView(project: Project) extends LanguageConsoleImpl(project, Bundle("sbt.remote.console.title"), PlainTextLanguage.INSTANCE) {
   import SessionLog._
 
   getConsoleEditor.setOneLineMode(true)

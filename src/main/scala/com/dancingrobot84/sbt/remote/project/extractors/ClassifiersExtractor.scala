@@ -1,4 +1,6 @@
-package com.dancingrobot84.sbt.remote.project.extractors
+package com.dancingrobot84.sbt.remote
+package project
+package extractors
 
 import java.io.File
 
@@ -7,7 +9,7 @@ import sbt.protocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 /**
  * @author: Nikolay Obedin
@@ -16,7 +18,7 @@ import scala.util.{ Failure, Success, Try }
 abstract class ClassifiersExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
-    logger.info("Extracting sources and javadocs...")
+    logger.info(Bundle("sbt.remote.import.extractSourcesAndJavadocs"))
     for {
       _ <- watchTaskKey[sbt.UpdateReport]("updateClassifiers")(updateWatcher)
     } yield Unit
@@ -50,7 +52,7 @@ abstract class ClassifiersExtractor extends ExtractorAdapter {
         artifact <- artifacts
       } {
         lib.addArtifact(artifact)
-        logger.info(s"Library '${lib.id}': Add '${artifact.file}' as '${artifact.getClass.getSimpleName}'")
+        logger.info(Bundle("sbt.remote.import.library.addArtifactAs", lib.id, artifact.file, artifact.getClass.getSimpleName))
       }
     }
   }

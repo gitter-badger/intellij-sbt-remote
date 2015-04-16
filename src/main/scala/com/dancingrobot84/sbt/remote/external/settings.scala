@@ -1,5 +1,6 @@
 package com.dancingrobot84.sbt.remote.external
 
+import com.dancingrobot84.sbt.remote.Bundle
 import com.intellij.openapi.components._
 import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutionSettings
 import com.intellij.openapi.externalSystem.service.project.PlatformFacade
@@ -118,4 +119,4 @@ final class ExecutionSettings(
 trait ProjectSettingsListener
   extends ExternalSystemSettingsListener[ProjectSettings]
 
-object Topic extends ExternalSystemTopic[ProjectSettingsListener]("SBT Remote", classOf[ProjectSettingsListener])
+object Topic extends ExternalSystemTopic[ProjectSettingsListener](Bundle("sbt.remote.name"), classOf[ProjectSettingsListener])

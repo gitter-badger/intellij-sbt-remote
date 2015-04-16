@@ -1,7 +1,8 @@
-package com.dancingrobot84.sbt.remote.external
+package com.dancingrobot84.sbt.remote
+package external
 
-import com.intellij.notification.{ NotificationType, Notification, Notifications }
-import com.intellij.openapi.externalSystem.model.task.{ ExternalSystemTaskType, ExternalSystemTaskId, ExternalSystemTaskNotificationListenerAdapter, ExternalSystemTaskNotificationListener }
+import com.intellij.notification.{ Notification, NotificationType, Notifications }
+import com.intellij.openapi.externalSystem.model.task.{ ExternalSystemTaskId, ExternalSystemTaskNotificationListenerAdapter, ExternalSystemTaskType }
 
 /**
  * @author Nikolay Obedin
@@ -11,6 +12,6 @@ class TaskNotificationListener extends ExternalSystemTaskNotificationListenerAda
   override def onTaskOutput(id: ExternalSystemTaskId, text: String, stdOut: Boolean): Unit =
     if (id.getType == ExternalSystemTaskType.RESOLVE_PROJECT &&
       id.getProjectSystemId == Id) {
-      Notifications.Bus.notify(new Notification("sbt-remote", "SBT Remote", text, NotificationType.WARNING))
+      Notifications.Bus.notify(new Notification(Bundle("sbt.remote.id"), Bundle("sbt.remote.name"), text, NotificationType.WARNING))
     }
 }

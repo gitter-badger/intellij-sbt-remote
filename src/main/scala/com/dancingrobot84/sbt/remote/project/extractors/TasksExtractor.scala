@@ -14,7 +14,7 @@ import scala.concurrent.Future
  */
 abstract class TasksExtractor extends ExtractorAdapter {
   override protected def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
-    logger.info("Extracting tasks...")
+    logger.info(Bundle("sbt.remote.import.extractTasks"))
     Future.sequence(ctx.acceptedProjects.map(pr => addTasks(pr.id.name))).map(_ => Unit)
   }
 
@@ -33,7 +33,7 @@ abstract class TasksExtractor extends ExtractorAdapter {
       withProject { project =>
         project.modules.find(_.id == projectName).foreach { module =>
           tasks.foreach(module.addTask)
-          logger.info(s"Module '${module.id}': Add ${tasks.length} tasks")
+          logger.info(Bundle("sbt.remote.import.module.addTasks", module.id, tasks.length.toString))
         }
       }
       Unit

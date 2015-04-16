@@ -27,16 +27,16 @@ class StartStopServerActionGroup(project: Project) extends DefaultActionGroup(nu
     super.update(e)
     val presentation = e.getPresentation
     if (isServerRunning.get) {
-      presentation.setText("Server is running")
-      presentation.setIcon(Bundle("sbt.remote.server.running"))
+      presentation.setText(Bundle("sbt.remote.action.serverIsRunning"))
+      presentation.setIcon(Bundle("sbt.remote.icon.serverIsRunning"))
     } else {
-      presentation.setText("Server is stopped")
-      presentation.setIcon(Bundle("sbt.remote.server.stopped"))
+      presentation.setText(Bundle("sbt.remote.action.serverStopped"))
+      presentation.setIcon(Bundle("sbt.remote.icon.serverIsStopped"))
     }
   }
 
   this.add(new AnAction() {
-    getTemplatePresentation.setText("Start Server")
+    getTemplatePresentation.setText(Bundle("sbt.remote.action.startServer"))
 
     override def update(e: AnActionEvent): Unit =
       e.getPresentation.setEnabled(!isServerRunning.get)
@@ -47,7 +47,7 @@ class StartStopServerActionGroup(project: Project) extends DefaultActionGroup(nu
   })
 
   this.add(new AnAction() {
-    getTemplatePresentation.setText("Stop Server")
+    getTemplatePresentation.setText(Bundle("sbt.remote.action.stopServer"))
 
     override def update(e: AnActionEvent): Unit =
       e.getPresentation.setEnabled(isServerRunning.get)

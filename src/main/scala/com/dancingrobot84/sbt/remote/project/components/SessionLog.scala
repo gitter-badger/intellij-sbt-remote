@@ -59,7 +59,7 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
         logE.entry match {
           case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
             addMessage(Message.Stdout(logE.entry.message))
-          case LogMessage("debug", _) => // ignore
+          case LogMessage(LogMessage.DEBUG, _) => // ignore
           case LogMessage(level, message) =>
             addMessage(Message.Log(Logger.Level.fromString(level), message))
           case _ => // ignore

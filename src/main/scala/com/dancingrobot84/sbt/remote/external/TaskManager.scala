@@ -57,7 +57,7 @@ class TaskManager
     }
 
     if (!runAsIs && moduleName.isEmpty)
-      throw new ExternalSystemException("Project scope for current configuration is not set")
+      throw new ExternalSystemException(Bundle("sbt.remote.task.projectScopeIsNotSet"))
 
     executor = Some(new TasksExecutor(projectPath, moduleName, taskNames.asScala, settings, logger))
     executor.foreach(e => Await.ready(e.run(), Duration.Inf))
@@ -115,28 +115,25 @@ object TaskManager {
             case logE: LogEvent => logE.entry match {
               case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
                 logger.debug(logE.entry.message)
-              case LogMessage("info", _) =>
-                logger.info(logE.entry.message)
-              case LogMessage("warn", _) =>
-                logger.warn(logE.entry.message)
-              case LogMessage("error", _) =>
-                logger.error(logE.entry.message)
+              case LogMessage(LogMessage.DEBUG, _) => // ignore
+              case LogMessage(level, _) =>
+                logger.log(logE.entry.message, Level.fromString(level), None)
               case _ => // ignore
             }
             case ExecutionStarting(id) => currentTask match {
               case Some((taskId, name)) if taskId == id =>
-                logger.info(s"'$name' is starting")
+                logger.info(Bundle("sbt.remote.task.isStarting", name))
               case _ =>
             }
             case ExecutionSuccess(id) => currentTask match {
               case Some((taskId, name)) if taskId == id =>
-                logger.info(s"'$name' is finished successfully")
+                logger.info(Bundle("sbt.remote.task.finished", name))
                 executeNextTask()
               case _ =>
             }
             case ExecutionFailure(id) => currentTask match {
               case Some((taskId, name)) if taskId == id =>
-                val msg = s"'$name' failed. Aborting."
+                val msg = Bundle("sbt.remote.task.failed", name)
                 logger.error(msg)
                 isDonePromise.tryFailure(new ExternalSystemException(msg))
               case _ =>
@@ -170,7 +167,7 @@ object TaskManager {
     }
 
     def cancel(): Boolean = {
-      shouldCancelPromise.tryFailure(new ExternalSystemException("Task execution was cancelled"))
+      shouldCancelPromise.tryFailure(new ExternalSystemException(Bundle("sbt.remote.task.cancelled")))
       isDonePromise.isCompleted
     }
   }

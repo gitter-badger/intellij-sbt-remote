@@ -116,7 +116,7 @@ object ProjectResolver {
           }
         }
 
-      logger.info("Connecting to SBT server...")
+      logger.info(Bundle("sbt.remote.import.connectingToServer"))
 
       val subscription = SbtServerConnectionManager().getSbtConnectorFor(projectPath).open(onConnect, { (reconnect, reason) =>
         if (reconnect)
@@ -130,7 +130,7 @@ object ProjectResolver {
     }
 
     def cancel(): Boolean = {
-      cancelPromise.tryFailure(new ImportCanceledException("Import cancelled"))
+      cancelPromise.tryFailure(new ImportCanceledException(Bundle("sbt.remote.task.cancelled")))
       projectPromise.isCompleted
     }
   }

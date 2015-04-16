@@ -91,7 +91,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
   protected def logOnWatchFailure[T](key: ScopedKey, result: Try[T])(onSuccess: T => Unit)(
     implicit ctx: Extractor.Context): Unit = result match {
     case Success(value) => onSuccess(value)
-    case Failure(exc)   => ctx.logger.error(s"Failed retrieving $key")
+    case Failure(exc)   => ctx.logger.error(Bundle("sbt.remote.import.failedRetrievingKey", key))
   }
 
   override def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): Future[Unit] = {
@@ -107,11 +107,11 @@ abstract class ExtractorAdapter extends Extractor with Context {
           }
 
           if (acceptedProjects.isEmpty)
-            initPromise.failure(new Error("No suitable modules found"))
+            initPromise.failure(new Error(Bundle("sbt.remote.import.noSuitableModulesFound")))
           else
             doAttach(getContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
         }.getOrElse {
-          initPromise.failure(new Error("No project found"))
+          initPromise.failure(new Error(Bundle("sbt.remote.import.noProjectFound")))
         }
     })
 

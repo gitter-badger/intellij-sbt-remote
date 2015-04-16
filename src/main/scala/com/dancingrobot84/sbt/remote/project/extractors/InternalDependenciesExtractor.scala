@@ -1,4 +1,6 @@
-package com.dancingrobot84.sbt.remote.project.extractors
+package com.dancingrobot84.sbt.remote
+package project
+package extractors
 
 import java.io.File
 
@@ -17,7 +19,7 @@ import scala.util.{ Failure, Success, Try }
 abstract class InternalDependenciesExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
-    logger.info("Extracting internal dependencies...")
+    logger.info(Bundle("sbt.remote.import.extractInternalDependencies"))
     for {
       _ <- watchTaskKey[Seq[Attributed[File]]]("unmanagedJars")(classpathWatcher(Configuration.Compile))
       _ <- watchTaskKey[Seq[Attributed[File]]]("test:unmanagedJars")(classpathWatcher(Configuration.Test))
@@ -37,7 +39,7 @@ abstract class InternalDependenciesExtractor extends ExtractorAdapter {
           } {
             lib.addArtifact(artifact)
             module.addDependency(Dependency.Library(lib.id, conf))
-            logger.info(s"Library '${lib.id}': Add '${artifact.file}' as '${artifact.getClass.getSimpleName}'")
+            logger.info(Bundle("sbt.remote.import.library.addArtifactAs", lib.id, artifact.file, artifact.getClass.getSimpleName))
           }
         }
       }
@@ -54,7 +56,7 @@ abstract class InternalDependenciesExtractor extends ExtractorAdapter {
         } {
           withProject(_.modules.find(_.id == projectRef.id.name).foreach { module =>
             module.addDependency(Dependency.Module(dependency.project.name, configuration))
-            logger.info(s"Module '${module.id}': Depend on '${dependency.project.name}'")
+            logger.info(Bundle("sbt.remote.import.module.dependOn", module.id, dependency.project.name))
           })
         }
       }

@@ -1,4 +1,6 @@
-package com.dancingrobot84.sbt.remote.project.extractors
+package com.dancingrobot84.sbt.remote
+package project
+package extractors
 
 import com.dancingrobot84.sbt.remote.project.structure._
 import sbt.protocol._
@@ -6,7 +8,7 @@ import sbt.protocol._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 /**
  * @author: Nikolay Obedin
@@ -15,7 +17,7 @@ import scala.util.{ Failure, Success, Try }
 abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
-    logger.info("Extracting external dependencies...")
+    logger.info(Bundle("sbt.remote.import.extractExternalDependencies"))
     for {
       _ <- watchTaskKey[sbt.UpdateReport]("update")(updateWatcher)
     } yield Unit
@@ -69,7 +71,7 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
           .getOrElse(project.addLibrary(libId.copy(internalVersion = lastVersion + 1)))
         artifacts.foreach { artifact =>
           libInProject.addArtifact(artifact)
-          logger.info(s"Library '${libInProject.id}': Add '${artifact.file}' as '${artifact.getClass.getSimpleName}'")
+          logger.info(Bundle("sbt.remote.import.library.addArtifactAs", libInProject.id, artifact.file, artifact.getClass.getSimpleName))
         }
         module.addDependency(Dependency.Library(libInProject.id, configuration))
       }

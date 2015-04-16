@@ -19,7 +19,7 @@ import scala.util.{ Failure, Success, Try }
 abstract class BasicsExtractor extends ExtractorAdapter {
 
   override def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
-    logger.info("Extracting basic settings...")
+    logger.info(Bundle("sbt.remote.import.extractBasicSetting"))
     for {
       _ <- watchSettingKey[File]("baseDirectory")(baseDirWatcher)
       _ <- watchSettingKey[String]("name")(nameWatcher)
@@ -44,7 +44,7 @@ abstract class BasicsExtractor extends ExtractorAdapter {
           project.addModule(p.name, baseDir)
           if (baseDir == new File(project.base))
             project.name = p.name
-          logger.info(s"Module '${p.name}': Set 'ContentRoot' to '$baseDir'")
+          logger.info(Bundle("sbt.remote.import.module.setContentRoot", p.name, baseDir))
         }
       }
     }
@@ -57,7 +57,7 @@ abstract class BasicsExtractor extends ExtractorAdapter {
             module.name = name
             if (project.base == module.base.toURI)
               project.name = name
-            logger.info(s"Module '${module.id}': Set 'Name' to '$name'")
+            logger.info(Bundle("sbt.remote.import.module.setName", module.id, name))
           }
         }
       }
@@ -72,9 +72,9 @@ abstract class BasicsExtractor extends ExtractorAdapter {
             project.modules.find(_.id == p.name).foreach { module =>
               if (FileUtil.isAncestor(module.base, path, false)) {
                 module.addPath(pathTrans(path))
-                logger.info(s"Module '${module.id}': Add '$path' to '${pathTrans(path).getClass.getSimpleName}'")
+                logger.info(Bundle("sbt.remote.import.module.addPathTo", module.id, path, pathTrans(path).getClass.getSimpleName))
               } else {
-                logger.warn(s"'$path' is not added because it is outside of module's '${module.id}' content root")
+                logger.warn(Bundle("sbt.remote.import.module.pathOutsideOfContentRoot", path, module.id))
               }
             }
           }
@@ -86,7 +86,7 @@ abstract class BasicsExtractor extends ExtractorAdapter {
     implicit ctx: Extractor.Context): Unit =
     logOnWatchFailure(key, result) { path =>
       ifProjectAccepted(key.scope.project) { p =>
-        logger.info(s"Module '${p.name}': Add '$path' to '${pathTrans(path).getClass.getSimpleName}'")
+        logger.info(Bundle("sbt.remote.import.module.addPathTo", p.name, path, pathTrans(path).getClass.getSimpleName))
         withProject { project =>
           project.modules.find(_.id == p.name).foreach(_.addPath(pathTrans(path)))
         }
