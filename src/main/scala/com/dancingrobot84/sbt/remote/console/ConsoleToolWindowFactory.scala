@@ -52,6 +52,10 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
         consoleView.clear()
     })
 
+    val startStopActions = new StartStopServerActionGroup(project)
+    toolbarActions.addSeparator
+    toolbarActions.add(startStopActions)
+
     val actionToolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.UNKNOWN, toolbarActions, false)
     val panel = new JPanel(new BorderLayout())
     panel.add(actionToolbar.getComponent, BorderLayout.WEST)
