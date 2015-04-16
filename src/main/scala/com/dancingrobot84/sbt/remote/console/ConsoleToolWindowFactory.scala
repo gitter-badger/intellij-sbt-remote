@@ -28,12 +28,6 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
   override def createToolWindowContent(project: Project, toolWindow: ToolWindow): Unit = {
     val consoleView = new ConsoleView(project)
     val toolbarActions = new DefaultActionGroup()
-    val toolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.UNKNOWN, toolbarActions, false)
-
-    val panel = new JPanel(new BorderLayout())
-    panel.add(toolbar.getComponent, BorderLayout.WEST)
-    panel.add(consoleView.getComponent, BorderLayout.CENTER)
-
       def addAction(action: AnAction): Unit = {
         Option(action.getShortcutSet).foreach(ss => action.registerCustomShortcutSet(ss, consoleView.getComponent))
         toolbarActions.add(action)
@@ -58,80 +52,41 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
         consoleView.clear()
     })
 
-    toolbar.setTargetComponent(panel)
+    val actionToolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.UNKNOWN, toolbarActions, false)
+    val panel = new JPanel(new BorderLayout())
+    panel.add(actionToolbar.getComponent, BorderLayout.WEST)
+    panel.add(consoleView.getComponent, BorderLayout.CENTER)
+    actionToolbar.setTargetComponent(panel)
     toolWindow.getComponent.add(panel)
   }
 }
 
 class ConsoleView(project: Project) extends LanguageConsoleImpl(project, "SBT Remote REPL", PlainTextLanguage.INSTANCE) {
+  import SessionLog._
+
   getConsoleEditor.setOneLineMode(true)
   Disposer.register(project, this)
 
-  import SessionLog._
-  SessionLog(project).foreach { listener =>
-    listener.addLogListener(new LogListener {
-      override def onMessage(message: Message): Unit = {
-        ApplicationManagerEx.getApplicationEx.invokeLater(new Runnable {
-          override def run(): Unit = {
-            message match {
-              case Message.Stdout(msg) =>
-                print(msg + "\n", UI.ConsoleViewContentType.NORMAL_OUTPUT)
-              case Message.Log(level, msg) =>
-                val contentType =
-                  if (level == Logger.Level.Info)
-                    UI.ConsoleViewContentType.SYSTEM_OUTPUT
-                  else
-                    UI.ConsoleViewContentType.ERROR_OUTPUT
-                print(s"[${level.toString.toLowerCase}] $msg\n", contentType)
-            }
-            scrollToEnd()
+  private val logListener = new LogListener {
+    override def onMessage(message: Message): Unit = {
+      ApplicationManagerEx.getApplicationEx.invokeLater(new Runnable {
+        override def run(): Unit = {
+          message match {
+            case Message.Stdout(msg) =>
+              print(msg + "\n", UI.ConsoleViewContentType.NORMAL_OUTPUT)
+            case Message.Log(level, msg) =>
+              val contentType =
+                if (level == Logger.Level.Info)
+                  UI.ConsoleViewContentType.SYSTEM_OUTPUT
+                else
+                  UI.ConsoleViewContentType.ERROR_OUTPUT
+              print(s"[${level.toString.toLowerCase}] $msg\n", contentType)
           }
-        })
-      }
-    })
-  }
-}
-
-class ConsoleExecutionHandler(project: Project) extends BaseConsoleExecuteActionHandler(false) {
-
-  private var isTaskDonePromise: Option[Promise[Unit]] = None
-  private var cancelPromise: Option[Promise[Unit]] = None
-
-  def cancel(): Unit = cancelPromise.foreach(_.tryFailure(null))
-
-  def isCancellable(): Boolean = cancelPromise.fold(false)(!_.isCompleted)
-
-  override def isEmptyCommandExecutionAllowed: Boolean = false
-
-  override def execute(text: String, console: LanguageConsoleView): Unit = {
-    isTaskDonePromise = Some(Promise())
-    cancelPromise = Some(Promise())
-
-    console.setEditable(false)
-    val subscription = SbtServerConnectionManager().getSbtConnectorFor(project.getBasePath).open({ client =>
-      for {
-        id0 <- client.requestExecution(text, None)
-      } {
-        cancelPromise.foreach(_.future.onFailure {
-          case _ => client.cancelExecution(id0).onSuccess {
-            case false => isTaskDonePromise.foreach(_.trySuccess(Unit))
-          }
-        })
-        client.handleEvents {
-          case ExecutionSuccess(id) if id == id0 =>
-            isTaskDonePromise.foreach(_.trySuccess(Unit))
-          case ExecutionFailure(id) if id == id0 =>
-            isTaskDonePromise.foreach(_.trySuccess(Unit))
-          case _ => // do nothing
+          requestScrollingToEnd()
         }
-      }
-    }, { (_, _) =>
-      Unit
-    })
-
-    isTaskDonePromise.foreach(_.future.onComplete { _ =>
-      console.setEditable(true)
-      subscription.cancel()
-    })
+      })
+    }
   }
+
+  SessionLog(project).foreach(_.addLogListener(logListener))
 }
