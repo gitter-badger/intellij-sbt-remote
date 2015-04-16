@@ -19,8 +19,8 @@ class StartStopServerActionGroup(project: Project) extends DefaultActionGroup(nu
   private val isServerRunning = new AtomicBoolean
 
   SbtServerConnectionManager().addConnectionListener(project.getBasePath, new ConnectionListener {
-    override def onConnect: Unit = isServerRunning.set(true)
-    override def onDisconnect: Unit = isServerRunning.set(false)
+    override def onConnect(): Unit = isServerRunning.set(true)
+    override def onDisconnect(): Unit = isServerRunning.set(false)
   })
 
   override def update(e: AnActionEvent): Unit = {

@@ -30,9 +30,9 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
   override def projectOpened(): Unit = Option(SystemSettings(project)).foreach { settings =>
     val connectionManager = SbtServerConnectionManager()
     connectionManager.addConnectionListener(project.getBasePath, new ConnectionListener {
-      override def onConnect: Unit =
+      override def onConnect(): Unit =
         connectionManager.getSbtConnectorFor(project.getBasePath).open(self.onConnect, self.onFailure)
-      override def onDisconnect: Unit = {}
+      override def onDisconnect(): Unit = {}
     })
     connectionManager.ensureConnectionFor(project.getBasePath)
   }

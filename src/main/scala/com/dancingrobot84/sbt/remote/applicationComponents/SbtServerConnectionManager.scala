@@ -72,7 +72,7 @@ object SbtServerConnectionManager {
   def apply() = ApplicationManager.getApplication.getComponent(classOf[SbtServerConnectionManager])
 
   trait ConnectionListener {
-    def onConnect: Unit
-    def onDisconnect: Unit
+    def onConnect(): Unit
+    def onDisconnect(): Unit
   }
 }
