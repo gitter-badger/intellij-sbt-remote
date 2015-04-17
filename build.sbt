@@ -1,7 +1,7 @@
 import sbt._
 import scalariform.formatter.preferences._
 
-val scalacOpts = Seq(
+lazy val scalacOpts = Seq(
   "-target:jvm-1.6",
   "-encoding", "UTF-8",
   "-deprecation",
@@ -11,11 +11,10 @@ val scalacOpts = Seq(
   "-Xlint"
 )
 
-lazy val root = project.in(file("."))
-  .settings(ideaPluginSettings:_*)
-  .settings(scalariformSettings:_*)
-  .settings(
-    name := "intellij-sbt-remote",
+lazy val commonSettings: Seq[Setting[_]] =
+  ideaPluginSettings ++
+  scalariformSettings ++
+  Seq(
     organization := "com.dancingrobot84",
     version := "0.0.1",
     scalaVersion := "2.11.5",
@@ -24,6 +23,23 @@ lazy val root = project.in(file("."))
     ideaBuild := "141.177.4",
     ideaPlugins += "Scala",
     assemblyExcludedJars in assembly <<= ideaFullJars,
+    assemblyJarName in assembly := name.value + ".jar",
+    ScalariformKeys.preferences := {
+      ScalariformKeys.preferences.value
+        .setPreference(AlignParameters, true)
+        .setPreference(AlignSingleLineCaseStatements, true)
+        .setPreference(DoubleIndentClassDeclaration, true)
+        .setPreference(IndentLocalDefs, true)
+        .setPreference(IndentPackageBlocks, false)
+        .setPreference(PreserveDanglingCloseParenthesis, true)
+    }
+  )
+
+lazy val root: Project = project.in(file("."))
+  .aggregate(jpsPlugin)
+  .settings(commonSettings:_*)
+  .settings(
+    name := "idea-plugin",
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala=false),
     resolvers += Resolver.typesafeIvyRepo("releases"),
     libraryDependencies ++= Seq(
@@ -31,17 +47,12 @@ lazy val root = project.in(file("."))
       "org.scalaz" %% "scalaz-core" % "7.1.1",
       "org.scala-sbt" %% "serialization" % "0.1.1"
     ),
-    ScalariformKeys.preferences := ScalariformKeys.preferences.value
-      .setPreference(AlignParameters, true)
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(IndentLocalDefs, true)
-      .setPreference(IndentPackageBlocks, false)
-      .setPreference(PreserveDanglingCloseParenthesis, true)
+    aggregate in updateIdea := false
   )
 
-lazy val ideaRunner = project.in(file("ideaRunner"))
+lazy val ideaRunner: Project = project.in(file("ideaRunner"))
   .dependsOn(root % Provided)
+  .dependsOn(jpsPlugin % Provided)
   .settings(
     scalaVersion := "2.11.5",
     autoScalaLibrary := false,
@@ -50,7 +61,14 @@ lazy val ideaRunner = project.in(file("ideaRunner"))
     unmanagedJars in Provided <<= ideaPluginJars.in(root)
   )
 
-updateIdea <<= (updateIdea, ideaBaseDirectory, ideaBuild, streams) map { (_, base, build, streams) =>
+lazy val jpsPlugin: Project = project.in(file("jpsPlugin"))
+  .settings(commonSettings:_*)
+  .settings(
+    name := "jps-plugin",
+    ideaBaseDirectory := baseDirectory.value.getParentFile / "idea"
+  )
+
+updateIdea in root <<= (updateIdea in root, ideaBaseDirectory in root, ideaBuild in root, streams) map { (_, base, build, streams) =>
   val scalaPluginUrl = url("https://plugins.jetbrains.com/files/1347/19130/scala-intellij-bin-1.4.15.zip")
   val scalaPluginZipFile = base / "archives" / "scala-plugin.zip"
   val pluginsDir = base/ build / "plugins"
@@ -62,4 +80,14 @@ updateIdea <<= (updateIdea, ideaBaseDirectory, ideaBuild, streams) map { (_, bas
   }
   streams.log.info(s"Unpacking $scalaPluginZipFile to $pluginsDir")
   IO.unzip(scalaPluginZipFile, pluginsDir)
+}
+
+lazy val packagePlugin = TaskKey[File]("package-plugin", "Create plugin's zip file ready to load into IDEA")
+
+packagePlugin in root <<= (assembly in jpsPlugin, assembly in root, target in root) map { (jpsJar, ideaJar, target) =>
+  val pluginName = "intellij-sbt-remote"
+  val sources = Seq(jpsJar, ideaJar).map { jar => jar -> s"$pluginName/lib/${jar.getName}" }
+  val out = target / s"$pluginName-plugin.zip"
+  IO.zip(sources, out)
+  out
 }

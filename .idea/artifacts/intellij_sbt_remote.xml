@@ -10,7 +10,7 @@
         <element id="library" level="project" name="SBT: org.spire-math:jawn-parser_2.11:0.6.0:jar" />
         <element id="library" level="project" name="SBT: org.spire-math:json4s-support_2.11:0.6.0:jar" />
         <element id="library" level="project" name="SBT: org.scalaz:scalaz-core_2.11:7.1.1:jar" />
-        <element id="archive" name="intellij-sbt-remote.jar">
+        <element id="archive" name="idea-plugin.jar">
           <element id="module-output" name="root" />
         </element>
         <element id="library" level="project" name="SBT: org.scala-lang:scala-reflect:2.11.5:jar" />
@@ -21,6 +21,10 @@
         <element id="library" level="project" name="SBT: org.scala-sbt:launcher-interface:0.13.8:jar" />
         <element id="library" level="project" name="SBT: org.scala-sbt:serialization_2.11:0.1.1:jar" />
         <element id="library" level="project" name="SBT: com.typesafe.sbtrc:client-2-11:1.0-32195589a00595c2bfd00c7ff10dc1dd8b99e2fd:jar" />
+        <element id="archive" name="jps-plugin.jar">
+          <element id="module-output" name="jpsPlugin" />
+          <element id="library" level="project" name="SBT: org.scala-lang:scala-library:2.11.5:jar" />
+        </element>
       </element>
     </root>
   </artifact>
