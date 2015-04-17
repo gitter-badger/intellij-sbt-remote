@@ -32,7 +32,11 @@ lazy val commonSettings: Seq[Setting[_]] =
         .setPreference(IndentLocalDefs, true)
         .setPreference(IndentPackageBlocks, false)
         .setPreference(PreserveDanglingCloseParenthesis, true)
-    }
+    },
+    libraryDependencies ++= Seq(
+      "com.typesafe.sbtrc" % "client-2-11" % "1.0-32195589a00595c2bfd00c7ff10dc1dd8b99e2fd",
+      "org.scala-sbt" %% "serialization" % "0.1.1"
+    )
   )
 
 lazy val root: Project = project.in(file("."))
@@ -42,11 +46,7 @@ lazy val root: Project = project.in(file("."))
     name := "idea-plugin",
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala=false),
     resolvers += Resolver.typesafeIvyRepo("releases"),
-    libraryDependencies ++= Seq(
-      "com.typesafe.sbtrc" % "client-2-11" % "1.0-32195589a00595c2bfd00c7ff10dc1dd8b99e2fd",
-      "org.scalaz" %% "scalaz-core" % "7.1.1",
-      "org.scala-sbt" %% "serialization" % "0.1.1"
-    ),
+    libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.1",
     aggregate in updateIdea := false
   )
 
@@ -65,7 +65,11 @@ lazy val jpsPlugin: Project = project.in(file("jpsPlugin"))
   .settings(commonSettings:_*)
   .settings(
     name := "jps-plugin",
-    ideaBaseDirectory := baseDirectory.value.getParentFile / "idea"
+    ideaBaseDirectory := baseDirectory.value.getParentFile / "idea",
+    ideaPluginJars ++= {
+      val jpsPluginDir = ideaBaseDirectory.value / ideaBuild.value / "plugins" / "Scala" / "lib" / "jps"
+      (jpsPluginDir * (globFilter("*.jar") -- "*asm*.jar")).classpath
+    }
   )
 
 updateIdea in root <<= (updateIdea in root, ideaBaseDirectory in root, ideaBuild in root, streams) map { (_, base, build, streams) =>

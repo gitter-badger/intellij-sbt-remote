@@ -1,29 +1,19 @@
 <component name="ArtifactManager">
   <artifact build-on-make="true" name="intellij-sbt-remote">
-    <output-path>$PROJECT_DIR$/target/artifact/</output-path>
+    <output-path>$PROJECT_DIR$/target/artifacts/plugin</output-path>
     <root id="root">
       <element id="directory" name="lib">
-        <element id="library" level="project" name="SBT: com.thoughtworks.paranamer:paranamer:2.6:jar" />
-        <element id="library" level="project" name="SBT: org.json4s:json4s-ast_2.11:3.2.10:jar" />
-        <element id="library" level="project" name="SBT: org.json4s:json4s-core_2.11:3.2.10:jar" />
-        <element id="library" level="project" name="SBT: org.scala-lang.modules:scala-pickling_2.11:0.10.0:jar" />
-        <element id="library" level="project" name="SBT: org.spire-math:jawn-parser_2.11:0.6.0:jar" />
-        <element id="library" level="project" name="SBT: org.spire-math:json4s-support_2.11:0.6.0:jar" />
-        <element id="library" level="project" name="SBT: org.scalaz:scalaz-core_2.11:7.1.1:jar" />
         <element id="archive" name="idea-plugin.jar">
           <element id="module-output" name="root" />
+          <element id="artifact" artifact-name="libraries" />
         </element>
-        <element id="library" level="project" name="SBT: org.scala-lang:scala-reflect:2.11.5:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:collections_2.11:0.13.8:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:control_2.11:0.13.8:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:interface:0.13.8:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:io_2.11:0.13.8:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:launcher-interface:0.13.8:jar" />
-        <element id="library" level="project" name="SBT: org.scala-sbt:serialization_2.11:0.1.1:jar" />
-        <element id="library" level="project" name="SBT: com.typesafe.sbtrc:client-2-11:1.0-32195589a00595c2bfd00c7ff10dc1dd8b99e2fd:jar" />
         <element id="archive" name="jps-plugin.jar">
           <element id="module-output" name="jpsPlugin" />
-          <element id="library" level="project" name="SBT: org.scala-lang:scala-library:2.11.5:jar" />
+          <element id="artifact" artifact-name="libraries" />
+          <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.5.jar" path-in-jar="/" />
+          <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.2.jar" path-in-jar="/" />
+          <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.5.jar" path-in-jar="/" />
+          <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.2.jar" path-in-jar="/" />
         </element>
       </element>
     </root>
