@@ -80,10 +80,10 @@ class TaskManager
 object TaskManager {
 
   final class Executor(projectPath: String,
-                            moduleName: Option[String],
-                            taskNames: Seq[String],
-                            settings: ExecutionSettings,
-                            logger: Logger) {
+                       moduleName: Option[String],
+                       taskNames: Seq[String],
+                       settings: ExecutionSettings,
+                       logger: Logger) {
 
     private var tasks = moduleName match {
       case Some(m) => taskNames.map(t => s"$m/$t")

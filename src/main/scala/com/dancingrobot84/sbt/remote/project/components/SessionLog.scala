@@ -42,7 +42,6 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
   override def projectClosed(): Unit =
     listeners.asScala.foreach(removeLogListener)
 
-
   /**
    * Add listener to session log.
    * Listener will receive all previous messages on adding.
@@ -54,7 +53,6 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
 
   def removeLogListener(listener: LogListener): Unit =
     listeners.remove(listener)
-
 
   private def addMessage(msg: Message): Unit = {
     log.add(msg)

@@ -54,9 +54,9 @@ class ProjectResolver
 
 object ProjectResolver {
   final class Executor(projectPath: String,
-                                 settings: ExecutionSettings,
-                                 isPreview: Boolean,
-                                 logger: Logger) {
+                       settings: ExecutionSettings,
+                       isPreview: Boolean,
+                       logger: Logger) {
 
     private val projectPromise = Promise[DataNode[ProjectData]]()
     private val cancelPromise = Promise[Unit]()

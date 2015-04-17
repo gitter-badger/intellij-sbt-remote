@@ -14,7 +14,6 @@ import sbt.ModuleID
  * @since: 2/12/15.
  */
 
-
 /**
  * Reference to a project
  * Used in project transformation in extractors to avoid leaking of project's real reference
