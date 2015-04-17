@@ -131,7 +131,7 @@ object ProjectResolver {
     }
 
     def cancel(): Boolean = {
-      cancelPromise.tryFailure(new ImportCanceledException(Bundle("sbt.remote.task.cancelled")))
+      cancelPromise.tryFailure(new ImportCanceledException(Bundle("sbt.remote.import.cancelled")))
       projectPromise.isCompleted
     }
   }
