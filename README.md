@@ -18,7 +18,7 @@ is not merged.
 
 1. Clone repo, enter SBT REPL
 2. `updateIdea`
-3. `assembly`
+3. `packagePlugin`
 
 Alternatively you can import this project into IDEA itself and run in debug mode
 using predefined run configurations. You still need to run `updateIdea` in REPL
