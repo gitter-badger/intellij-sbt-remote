@@ -1,13 +1,14 @@
 package com.dancingrobot84.sbt.remote.jps
 
-import com.intellij.util.xmlb.XmlSerializer
-import org.jdom.Element
-import org.jdom.filter.ElementFilter
-import org.jetbrains.jps.model.JpsProject
-import org.jetbrains.jps.model.serialization.{ JpsProjectExtensionSerializer, JpsModelSerializerExtension }
 import java.util
 
+import org.jdom.Element
+import org.jdom.output.XMLOutputter
+import org.jetbrains.jps.model.JpsProject
+import org.jetbrains.jps.model.serialization.{JpsModelSerializerExtension, JpsProjectExtensionSerializer}
+
 import scala.collection.JavaConverters._
+import scala.xml._
 
 /**
  * @author Nikolay Obedin
@@ -17,17 +18,19 @@ class ModelSerializerExtension extends JpsModelSerializerExtension {
   override def getProjectExtensionSerializers: util.List[_ <: JpsProjectExtensionSerializer] = {
     val sbtRemoteSerializer = new JpsProjectExtensionSerializer("sbt-remote.xml", "SbtRemoteSystemSettings") {
       override def loadExtension(e: JpsProject, componentTag: Element): Unit = {
-        componentTag.getDescendants(new ElementFilter("option")).asScala.find {
-          c => Option(c.getAttribute("name")).fold(false)(_.getValue == "externalProjectPath")
-        }.flatMap(e => Option(e.getAttribute("value")).map(_.getValue)).foreach { path =>
-          val settings = new SbtRemoteProjectSettings(path)
-          e.getContainer.setChild(SbtRemoteProjectSettings.Role, settings)
-        }
+        val scalaXml = XML.loadString(new XMLOutputter().outputString(componentTag))
+        val settings = ModelSerializerExtension.deserializeProjectSettings(scalaXml)
+        settings.foreach(e.getContainer.setChild(SbtRemoteProjectSettings.Role, _))
       }
-
       override def saveExtension(e: JpsProject, componentTag: Element): Unit = {}
     }
     Seq(sbtRemoteSerializer).asJava
   }
 }
 
+object ModelSerializerExtension {
+  def deserializeProjectSettings(from: Elem): Option[SbtRemoteProjectSettings] =
+    (from \\ "ProjectSettings" \\ "option").find(_ \@ "name" == "externalProjectPath").map { pathNode =>
+      new SbtRemoteProjectSettings(pathNode \@ "value")
+    }
+}
