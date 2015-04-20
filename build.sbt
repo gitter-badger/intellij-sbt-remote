@@ -39,7 +39,7 @@ lazy val commonSettings: Seq[Setting[_]] =
     )
   )
 
-lazy val root: Project = project.in(file("."))
+lazy val ideaPlugin: Project = project.in(file("."))
   .aggregate(jpsPlugin)
   .settings(commonSettings:_*)
   .settings(
@@ -51,14 +51,14 @@ lazy val root: Project = project.in(file("."))
   )
 
 lazy val ideaRunner: Project = project.in(file("ideaRunner"))
-  .dependsOn(root % Provided)
+  .dependsOn(ideaPlugin % Provided)
   .dependsOn(jpsPlugin % Provided)
   .settings(
     scalaVersion := "2.11.5",
     autoScalaLibrary := false,
-    unmanagedJars in Compile <<= ideaMainJars.in(root),
+    unmanagedJars in Compile <<= ideaMainJars.in(ideaPlugin),
     unmanagedJars in Compile += file(System.getProperty("java.home")).getParentFile / "lib" / "tools.jar",
-    unmanagedJars in Provided <<= ideaPluginJars.in(root)
+    unmanagedJars in Provided <<= ideaPluginJars.in(ideaPlugin)
   )
 
 lazy val jpsPlugin: Project = project.in(file("jpsPlugin"))
@@ -72,7 +72,7 @@ lazy val jpsPlugin: Project = project.in(file("jpsPlugin"))
     }
   )
 
-updateIdea in root <<= (updateIdea in root, ideaBaseDirectory in root, ideaBuild in root, streams) map { (_, base, build, streams) =>
+updateIdea in ideaPlugin <<= (updateIdea in ideaPlugin, ideaBaseDirectory in ideaPlugin, ideaBuild in ideaPlugin, streams) map { (_, base, build, streams) =>
   val scalaPluginUrl = url("https://plugins.jetbrains.com/files/1347/19130/scala-intellij-bin-1.4.15.zip")
   val scalaPluginZipFile = base / "archives" / "scala-plugin.zip"
   val pluginsDir = base/ build / "plugins"
@@ -88,9 +88,12 @@ updateIdea in root <<= (updateIdea in root, ideaBaseDirectory in root, ideaBuild
 
 lazy val packagePlugin = TaskKey[File]("package-plugin", "Create plugin's zip file ready to load into IDEA")
 
-packagePlugin in root <<= (assembly in jpsPlugin, assembly in root, target in root) map { (jpsJar, ideaJar, target) =>
+packagePlugin in ideaPlugin <<= (assembly in jpsPlugin, assembly in ideaPlugin, target in ideaPlugin) map { (jpsJar, ideaJar, target) =>
   val pluginName = "intellij-sbt-remote"
-  val sources = Seq(jpsJar, ideaJar).map { jar => jar -> s"$pluginName/lib/${jar.getName}" }
+  val sources = Seq(
+    ideaJar -> s"$pluginName/lib/${ideaJar.getName}",
+    jpsJar  -> s"$pluginName/${jpsJar.getName}"
+  )
   val out = target / s"$pluginName-plugin.zip"
   IO.zip(sources, out)
   out

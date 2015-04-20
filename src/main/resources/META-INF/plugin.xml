@@ -45,7 +45,7 @@
                 factoryClass="com.dancingrobot84.sbt.remote.console.ConsoleToolWindowFactory"
                 conditionClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowCondition"/>
 
-        <compileServer.plugin classpath="jps-plugin.jar"/>
+        <compileServer.plugin classpath="../jps-plugin.jar"/>
     </extensions>
 
 </idea-plugin>

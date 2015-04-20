@@ -1,0 +1,22 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="plugin">
+    <output-path>$PROJECT_DIR$/target/artifacts/plugin</output-path>
+    <root id="root">
+      <element id="directory" name="lib">
+        <element id="archive" name="idea-plugin.jar">
+          <element id="artifact" artifact-name="libraries" />
+          <element id="module-output" name="ideaPlugin" />
+          <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scalaz/scalaz-core_2.11/bundles/scalaz-core_2.11-7.1.1.jar" path-in-jar="/" />
+        </element>
+      </element>
+      <element id="archive" name="jps-plugin.jar">
+        <element id="module-output" name="jpsPlugin" />
+        <element id="artifact" artifact-name="libraries" />
+        <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.5.jar" path-in-jar="/" />
+        <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.2.jar" path-in-jar="/" />
+        <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.5.jar" path-in-jar="/" />
+        <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.2.jar" path-in-jar="/" />
+      </element>
+    </root>
+  </artifact>
+</component>
