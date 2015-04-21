@@ -37,10 +37,19 @@ class RemoteBuilder extends ModuleLevelBuilder(BuilderCategory.SOURCE_GENERATOR)
     implicit val implicitContext = context
     SbtRemoteProjectSettings.get(context.getProjectDescriptor.getProject).foreach { settings =>
       val donePromise = Promise[ExitCode]()
+
+      val modulesToCompile = chunk.getModules.asScala.flatMap { module =>
+        val qualifiedName = settings.moduleNameToQualifiedNameMap.get(module.getName)
+        if (qualifiedName.isEmpty)
+          compilerMessage(BuildMessage.Kind.WARNING, Bundle("sbt.remote.jps.moduleNotFound", module.getName), None, -1, -1)
+        qualifiedName
+      }.toSet
+
       // TODO: reuse SBT connection from IDEA process
       progressMessage(Bundle("sbt.remote.jps.connectingToServer"))
       SbtConnector("idea", "Intellij IDEA", new File(settings.projectPath))
-        .open(onConnect(donePromise), onFailure(donePromise))
+        .open(onConnect(modulesToCompile, donePromise), onFailure(donePromise))
+
       return Await.result(donePromise.future, Duration.Inf)
     }
 
@@ -49,7 +58,7 @@ class RemoteBuilder extends ModuleLevelBuilder(BuilderCategory.SOURCE_GENERATOR)
 
   override def getPresentableName: String = Bundle("sbt.remote.jps.builderName")
 
-  private def onConnect(donePromise: Promise[ExitCode])(client: SbtClient)(
+  private def onConnect(modules: Set[String], donePromise: Promise[ExitCode])(client: SbtClient)(
       implicit context: CompileContext): Unit = {
     checkCanceled(client, donePromise, -1)
     var jobId: Long = -1
@@ -65,7 +74,8 @@ class RemoteBuilder extends ModuleLevelBuilder(BuilderCategory.SOURCE_GENERATOR)
       }
     }
 
-    client.requestExecution("compile", None).foreach(jobId = _)
+    val command = modules.map(_ + "/compile").mkString("; ", " ; ", "")
+    client.requestExecution(command, None).foreach(jobId = _)
   }
 
   private def handleLogEvents(jobId: Long, event: Event)(implicit context: CompileContext): Unit = event match {
