@@ -47,7 +47,7 @@ class SbtServerConnectionManager extends ApplicationComponent.Adapter {
             listeners.get(path).foreach(_.foreach(_.onDisconnect))
           }
           if (!reconnecting) connectorsPoolLock.synchronized {
-            connectorsPool.remove(path) // TODO: maybe close connector?
+            connectorsPool.remove(path).foreach(_.close)
           }
         })
         connectorsPool.put(path, connector)

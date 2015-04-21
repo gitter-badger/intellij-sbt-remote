@@ -3,7 +3,7 @@ package project
 package extractors
 
 import com.dancingrobot84.sbt.remote.project.structure.Task
-import sbt.protocol.Completion
+import sbt.protocol.{ProjectReference, Completion}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -15,12 +15,12 @@ import scala.concurrent.Future
 abstract class TasksExtractor extends ExtractorAdapter {
   override protected def doAttach(implicit ctx: Extractor.Context): Future[Unit] = {
     logger.info(Bundle("sbt.remote.import.extractTasks"))
-    Future.sequence(ctx.acceptedProjects.map(pr => addTasks(pr.id.name))).map(_ => Unit)
+    Future.sequence(ctx.acceptedProjects.map(pr => addTasks(pr.id))).map(_ => Unit)
   }
 
-  private def getCompletions(projectName: String)(implicit ctx: Extractor.Context): Future[Vector[String]] =
+  private def getCompletions(projectRef: ProjectReference)(implicit ctx: Extractor.Context): Future[Vector[String]] =
     for {
-      completions <- ctx.client.possibleAutocompletions(s"$projectName/", 0)
+      completions <- ctx.client.possibleAutocompletions(s"{${projectRef.build}}${projectRef.name}/", 0)
     } yield {
       completions.collect { case Completion(_, name, false) => name }.distinct
     }
@@ -28,10 +28,10 @@ abstract class TasksExtractor extends ExtractorAdapter {
   private def filterKeys(completions: Vector[String])(implicit ctx: Extractor.Context): Future[Vector[Task]] =
     Future.sequence(completions.map(ctx.client.lookupScopedKey)).map(_.flatten.map(k => Task(k.key.name)))
 
-  private def addTasks(projectName: String)(implicit ctx: Extractor.Context): Future[Unit] =
-    getCompletions(projectName).flatMap(filterKeys).map { tasks =>
+  private def addTasks(projectRef: ProjectReference)(implicit ctx: Extractor.Context): Future[Unit] =
+    getCompletions(projectRef).flatMap(filterKeys).map { tasks =>
       withProject { project =>
-        project.modules.find(_.id == projectName).foreach { module =>
+        project.modules.find(_.id == projectRef.name).foreach { module =>
           tasks.foreach(module.addTask)
           logger.info(Bundle("sbt.remote.import.module.addTasks", module.id, tasks.length.toString))
         }

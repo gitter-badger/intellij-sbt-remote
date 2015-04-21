@@ -97,7 +97,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
 
   private def doWatch[T](key: String)(keyProcessor: ScopedKey => Future[WatchResult[T]])(
     implicit unpickler: Unpickler[T], ex: ExecutionContext, ctx: Extractor.Context): Future[Seq[WatchResult[T]]] = {
-    val allProjectKeys = ctx.acceptedProjects.map(pr => s"${pr.id.name}/$key")
+    val allProjectKeys = ctx.acceptedProjects.map(pr => s"{${pr.id.build}}${pr.id.name}/$key")
     for {
       allKeys <- Future.traverse(allProjectKeys)(ctx.client.lookupScopedKey).map(_.flatten.distinct.toSeq)
       results <- Future.sequence(allKeys
@@ -113,8 +113,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
   protected def ifProjectAccepted(project: Option[ProjectReference])(onAccept: ProjectReference => Unit)(
     implicit ctx: Extractor.Context): Unit =
     project.foreach { p =>
-      val base = withProject(_.base)
-      if (p.build == base && ctx.acceptedProjects.exists(_.id == p))
+      if (ctx.acceptedProjects.exists(_.id == p))
         onAccept(p)
     }
 
@@ -143,20 +142,11 @@ abstract class ExtractorAdapter extends Extractor with Context {
 
     addSubscription(client.watchBuild {
       case MinimalBuildStructure(builds, allProjects) =>
-        val buildOpt = builds.find(_ == projectRef.project.base).headOption
-
-        buildOpt.map { build =>
-          val acceptedProjects = allProjects.filter { p =>
-            p.id.build == build && p.plugins.contains("sbt.plugins.JvmPlugin")
-          }
-
-          if (acceptedProjects.isEmpty)
-            initPromise.failure(new Error(Bundle("sbt.remote.import.noSuitableModulesFound")))
-          else
-            doAttach(getContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
-        }.getOrElse {
-          initPromise.failure(new Error(Bundle("sbt.remote.import.noProjectFound")))
-        }
+        val acceptedProjects = allProjects.filter(_.plugins.contains("sbt.plugins.JvmPlugin"))
+        if (acceptedProjects.isEmpty)
+          initPromise.failure(new Error(Bundle("sbt.remote.import.noSuitableModulesFound")))
+        else
+          doAttach(getContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
     })
 
     initPromise.future
