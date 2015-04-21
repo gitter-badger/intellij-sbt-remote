@@ -32,7 +32,7 @@ abstract class InternalDependenciesExtractor extends ExtractorAdapter {
       ifProjectAccepted(key.scope.project) { p =>
         withProject { project =>
           for {
-            module <- project.modules.find(_.id == p.name)
+            module <- project.modules.find(_.id == p)
             jar <- jars
             lib = project.addLibrary(Library.Id.forUnmanagedJars(module.id, conf))
             artifact = Artifact.Binary(jar.data)
@@ -54,9 +54,9 @@ abstract class InternalDependenciesExtractor extends ExtractorAdapter {
             .flatMap(Configuration.fromString)
             .getOrElse(Configuration.Compile)
         } {
-          withProject(_.modules.find(_.id == projectRef.id.name).foreach { module =>
-            module.addDependency(Dependency.Module(dependency.project.name, configuration))
-            logger.info(Bundle("sbt.remote.import.module.dependOn", module.id, dependency.project.name))
+          withProject(_.modules.find(_.id == projectRef.id).foreach { module =>
+            module.addDependency(Dependency.Module(dependency.project, configuration))
+            logger.info(Bundle("sbt.remote.import.module.dependOn", module.id.name, dependency.project.name))
           })
         }
       }

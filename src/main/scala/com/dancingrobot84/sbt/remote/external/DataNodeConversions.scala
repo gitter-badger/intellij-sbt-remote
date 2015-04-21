@@ -34,7 +34,7 @@ object DataNodeConversions {
       for {
         (module, dependency) <- dependencies
         moduleNode <- moduleNodes
-        if moduleNode.getData.getId == module.id
+        if moduleNode.getData.getId == module.id.name
         depNode <- dependency.toDataNode(moduleNode, libraryNodes, moduleNodes)
       } moduleNode.addChild(depNode)
 
@@ -49,7 +49,7 @@ object DataNodeConversions {
       val ideModulePath = parent.getData
         .getIdeProjectFileDirectoryPath + "/.idea/modules"
       val moduleData = new ModuleData(
-        module.id, external.Id, StdModuleTypes.JAVA.getId,
+        module.id.name, external.Id, StdModuleTypes.JAVA.getId,
         module.name, ideModulePath, module.base.getCanonicalPath)
       val moduleNode = new DataNode(ProjectKeys.MODULE, moduleData, parent)
 
@@ -145,7 +145,7 @@ object DataNodeConversions {
 
       dependency match {
         case Dependency.Library(libId, conf) => addLibraryDependency(libId, conf)
-        case Dependency.Module(depId, conf)  => addModuleDependency(depId, conf)
+        case Dependency.Module(depId, conf)  => addModuleDependency(depId.name, conf)
       }
     }
   }

@@ -31,9 +31,9 @@ abstract class TasksExtractor extends ExtractorAdapter {
   private def addTasks(projectRef: ProjectReference)(implicit ctx: Extractor.Context): Future[Unit] =
     getCompletions(projectRef).flatMap(filterKeys).map { tasks =>
       withProject { project =>
-        project.modules.find(_.id == projectRef.name).foreach { module =>
+        project.modules.find(_.id == projectRef).foreach { module =>
           tasks.foreach(module.addTask)
-          logger.info(Bundle("sbt.remote.import.module.addTasks", module.id, tasks.length.toString))
+          logger.info(Bundle("sbt.remote.import.module.addTasks", module.id.name, tasks.length.toString))
         }
       }
       Unit

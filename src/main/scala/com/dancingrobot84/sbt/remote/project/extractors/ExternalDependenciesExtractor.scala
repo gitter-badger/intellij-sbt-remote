@@ -29,11 +29,11 @@ abstract class ExternalDependenciesExtractor extends ExtractorAdapter {
       ifProjectAccepted(key.scope.project) { p =>
         regroupConfigurationReports(updateReport.configurations).foreach {
           case (moduleReport, confs) =>
-            confs.foreach(conf => addLibraryDependency(p.name, moduleReport, conf))
+            confs.foreach(conf => addLibraryDependency(p, moduleReport, conf))
         }
         updateReport.configurations
           .find(_.configuration == "scala-tool")
-          .foreach(c => setupScalaSdk(p.name, c.modules))
+          .foreach(c => setupScalaSdk(p, c.modules))
       }
     }
 

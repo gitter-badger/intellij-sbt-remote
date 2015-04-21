@@ -28,7 +28,7 @@ abstract class ClassifiersExtractor extends ExtractorAdapter {
     implicit ctx: Extractor.Context): Unit =
     logOnWatchFailure(key, result) { updateReport =>
       ifProjectAccepted(key.scope.project) { p =>
-        updateReport.configurations.foreach(_.modules.foreach(m => addSources(p.name, m)))
+        updateReport.configurations.foreach(_.modules.foreach(m => addSources(p, m)))
       }
     }
 

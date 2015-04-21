@@ -42,7 +42,7 @@ abstract class BasicsExtractor extends ExtractorAdapter {
     logOnWatchFailure(key, result) { baseDir =>
       ifProjectAccepted(key.scope.project) { p =>
         withProject { project =>
-          project.addModule(p.name, baseDir)
+          project.addModule(p, baseDir)
           if (baseDir == new File(project.base))
             project.name = p.name
           logger.info(Bundle("sbt.remote.import.module.setContentRoot", p.name, baseDir))
@@ -54,11 +54,11 @@ abstract class BasicsExtractor extends ExtractorAdapter {
     logOnWatchFailure(key, result) { name =>
       ifProjectAccepted(key.scope.project) { p =>
         withProject { project =>
-          project.modules.find(_.id == p.name).foreach { module =>
+          project.modules.find(_.id == p).foreach { module =>
             module.name = name
             if (project.base == module.base.toURI)
               project.name = name
-            logger.info(Bundle("sbt.remote.import.module.setName", module.id, name))
+            logger.info(Bundle("sbt.remote.import.module.setName", module.id.name, name))
           }
         }
       }
@@ -70,12 +70,12 @@ abstract class BasicsExtractor extends ExtractorAdapter {
       ifProjectAccepted(key.scope.project) { p =>
         paths.foreach { path =>
           withProject { project =>
-            project.modules.find(_.id == p.name).foreach { module =>
+            project.modules.find(_.id == p).foreach { module =>
               if (FileUtil.isAncestor(module.base, path, false)) {
                 module.addPath(pathTrans(path))
-                logger.info(Bundle("sbt.remote.import.module.addPathTo", module.id, path, pathTrans(path).getClass.getSimpleName))
+                logger.info(Bundle("sbt.remote.import.module.addPathTo", module.id.name, path, pathTrans(path).getClass.getSimpleName))
               } else {
-                logger.warn(Bundle("sbt.remote.import.module.pathOutsideOfContentRoot", path, module.id))
+                logger.warn(Bundle("sbt.remote.import.module.pathOutsideOfContentRoot", path, module.id.name))
               }
             }
           }
@@ -89,7 +89,7 @@ abstract class BasicsExtractor extends ExtractorAdapter {
       ifProjectAccepted(key.scope.project) { p =>
         logger.info(Bundle("sbt.remote.import.module.addPathTo", p.name, path, pathTrans(path).getClass.getSimpleName))
         withProject { project =>
-          project.modules.find(_.id == p.name).foreach(_.addPath(pathTrans(path)))
+          project.modules.find(_.id == p).foreach(_.addPath(pathTrans(path)))
         }
       }
     }
@@ -99,7 +99,7 @@ abstract class BasicsExtractor extends ExtractorAdapter {
     logOnWatchFailure(key, result) { options =>
       ifProjectAccepted(key.scope.project) { p =>
         withProject { project =>
-          project.modules.find(_.id == p.name).foreach(m => m.scalacOptions = options)
+          project.modules.find(_.id == p).foreach(m => m.scalacOptions = options)
         }
       }
     }

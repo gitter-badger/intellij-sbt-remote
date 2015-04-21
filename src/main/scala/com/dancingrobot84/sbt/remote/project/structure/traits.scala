@@ -3,7 +3,7 @@ package com.dancingrobot84.sbt.remote.project.structure
 import java.io.File
 import java.net.URI
 
-import sbt.ModuleID
+import sbt.{protocol, ModuleID}
 
 /**
  * Simplified representation of IDEA's project structure.
@@ -58,7 +58,7 @@ trait Module {
 }
 
 object Module {
-  type Id = String
+  type Id = protocol.ProjectReference
 }
 
 trait Library {
@@ -92,7 +92,7 @@ object Library {
 
   object Id {
     def forUnmanagedJars(moduleId: Module.Id, configuration: Configuration) =
-      Id("unmanaged-jars", moduleId, configuration.toString.toLowerCase, 0)
+      Id("unmanaged-jars", moduleId.name, configuration.toString.toLowerCase, 0)
 
     def fromSbtModuleId(moduleId: ModuleID) =
       Id(moduleId.organization, moduleId.name, moduleId.revision, 0)

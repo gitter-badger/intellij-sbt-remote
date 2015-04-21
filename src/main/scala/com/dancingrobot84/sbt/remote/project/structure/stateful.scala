@@ -19,7 +19,7 @@ class StatefulProject(val base: URI, var name: String) extends Project with Clon
 
   override def addModule(id: Module.Id, base: File) =
     modules0.find(_.id == id).getOrElse {
-      val module = new StatefulModule(base, id, id)
+      val module = new StatefulModule(base, id, id.name)
       modules0 += module
       module
     }
