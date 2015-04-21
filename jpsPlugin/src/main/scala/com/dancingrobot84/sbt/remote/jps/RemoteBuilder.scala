@@ -57,46 +57,50 @@ class RemoteBuilder extends ModuleLevelBuilder(BuilderCategory.SOURCE_GENERATOR)
     client.handleEvents { event =>
       checkCanceled(client, donePromise, jobId)
       event match {
-        case CompilationFailure(id, failure) => failure match {
-          case CompilationFailure(_, Position(srcPath, _, lineOpt, lineContent, _, pointerOpt, space), severity, message) =>
-            val messageWithLineAndPointer =
-              message + "\n" + lineContent + space.map("\n" + _ + "^").getOrElse("")
-            val kind = severity match {
-              case xsbti.Severity.Warn  => BuildMessage.Kind.WARNING
-              case xsbti.Severity.Error => BuildMessage.Kind.ERROR
-              case _                    => BuildMessage.Kind.INFO
-            }
-            val line = lineOpt.fold(-1L)(_.toLong)
-            val column = pointerOpt.fold(-1L)(_.toLong + 1L)
-            compilerMessage(kind, messageWithLineAndPointer, srcPath, line, column)
-          case _ => // ignore
-        }
         case ExecutionSuccess(id) if id == jobId =>
           donePromise.trySuccess(ExitCode.OK)
         case ExecutionFailure(id) if id == jobId =>
           donePromise.trySuccess(ExitCode.ABORT)
-        case TaskStarted(id, _, Some(key)) if id == jobId =>
-          progressMessage(Bundle("sbt.remote.jps.taskIsRunning", key.key.name))
-        case TaskFinished(id, _, Some(key), success, _) if id == jobId =>
-          val message = {
-            val taskName = key.key.name
-            if (success)
-              Bundle("sbt.remote.jps.taskSucceeded", taskName)
-            else
-              Bundle("sbt.remote.jps.taskFailed", taskName)
-          }
-          progressMessage(message)
-        case logEvent : LogEvent if !logEvent.entry.message.startsWith("Read from stdout:") =>
-          logEvent.entry match {
-            case LogMessage(level, message) if level != LogMessage.DEBUG =>
-              progressMessage(s"[$level] $message")
-            case _ => // ignore
-          }
-        case _ => // ignore
+        case _ => handleLogEvents(jobId, event)
       }
     }
 
     client.requestExecution("compile", None).foreach(jobId = _)
+  }
+
+  private def handleLogEvents(jobId: Long, event: Event)(implicit context: CompileContext): Unit = event match {
+    case CompilationFailure(_, failure) => failure match {
+      case CompilationFailure(_, Position(srcPath, _, lineOpt, lineContent, _, pointerOpt, space), severity, message) =>
+        val messageWithLineAndPointer =
+          message + "\n" + lineContent + space.map("\n" + _ + "^").getOrElse("")
+        val kind = severity match {
+          case xsbti.Severity.Warn  => BuildMessage.Kind.WARNING
+          case xsbti.Severity.Error => BuildMessage.Kind.ERROR
+          case _                    => BuildMessage.Kind.INFO
+        }
+        val line = lineOpt.fold(-1L)(_.toLong)
+        val column = pointerOpt.fold(-1L)(_.toLong + 1L)
+        compilerMessage(kind, messageWithLineAndPointer, srcPath, line, column)
+      case _ => // ignore
+    }
+    case TaskStarted(id, _, Some(key)) if id == jobId =>
+      progressMessage(Bundle("sbt.remote.jps.taskIsRunning", key.key.name))
+    case TaskFinished(id, _, Some(key), success, _) if id == jobId =>
+      val message = {
+        val taskName = key.key.name
+        if (success)
+          Bundle("sbt.remote.jps.taskSucceeded", taskName)
+        else
+          Bundle("sbt.remote.jps.taskFailed", taskName)
+      }
+      progressMessage(message)
+    case logEvent : LogEvent if !logEvent.entry.message.startsWith("Read from stdout:") =>
+      logEvent.entry match {
+        case LogMessage(level, message) if level != LogMessage.DEBUG =>
+          progressMessage(s"[$level] $message")
+        case _ => // ignore
+      }
+    case _ => // ignore
   }
 
   private def onFailure(donePromise: Promise[ExitCode])(reconnecting: Boolean, cause: String)(
