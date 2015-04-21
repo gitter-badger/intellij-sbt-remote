@@ -45,12 +45,11 @@ class TaskManager
 
     val logger = new Logger {
       def log(msg: String, level: Logger.Level, cause: Option[Throwable]): Unit = {
-        if (msg.startsWith("Read from stdout:")) // TODO: write SBT guys about duplicating messages
-          return
         val isStdOut = level match {
           case Level.Debug | Level.Info => true
           case Level.Error | Level.Warn => false
         }
+        // FIXME: using debug level is a workaround to output stdout/stderr messages
         val loggerLevel = if (level == Level.Debug) "" else s"[${level.toString.toLowerCase}] "
         listener.onTaskOutput(id, s"$loggerLevel$msg\n", isStdOut)
       }
@@ -112,14 +111,14 @@ object TaskManager {
           }
 
           client.handleEvents {
-            case logE: LogEvent => logE.entry match {
-              case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
-                logger.debug(logE.entry.message)
-              case LogMessage(LogMessage.DEBUG, _) => // ignore
-              case LogMessage(level, _) =>
-                logger.log(logE.entry.message, Level.fromString(level), None)
-              case _ => // ignore
-            }
+            case logEvent: LogEvent if !logEvent.entry.message.startsWith("Read from stdout:") =>
+              logEvent.entry match {
+                case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
+                  logger.debug(logEvent.entry.message)
+                case LogMessage(level, message) if level != LogMessage.DEBUG =>
+                  logger.log(message, Level.fromString(level), None)
+                case _ => // ignore
+              }
             case ExecutionStarting(id) => currentTask match {
               case Some((taskId, name)) if taskId == id =>
                 logger.info(Bundle("sbt.remote.task.isStarting", name))

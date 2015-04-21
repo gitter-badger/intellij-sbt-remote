@@ -61,12 +61,11 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
 
   private def onConnect(client: SbtClient): Unit = {
     client.handleEvents {
-      case logE: LogEvent if !logE.entry.message.startsWith("Read from stdout:") =>
-        logE.entry match {
+      case logEvent: LogEvent if !logEvent.entry.message.startsWith("Read from stdout:") =>
+        logEvent.entry match {
           case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
-            addMessage(Message.Stdout(logE.entry.message))
-          case LogMessage(LogMessage.DEBUG, _) => // ignore
-          case LogMessage(level, message) =>
+            addMessage(Message.Stdout(logEvent.entry.message))
+          case LogMessage(level, message) if level != LogMessage.DEBUG =>
             addMessage(Message.Log(Logger.Level.fromString(level), message))
           case _ => // ignore
         }
