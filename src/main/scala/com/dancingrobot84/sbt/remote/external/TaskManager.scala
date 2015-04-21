@@ -31,17 +31,22 @@ class TaskManager
 
   override def executeTasks(id: ExternalSystemTaskId,
                             taskNames: java.util.List[String],
-                            projectPath: String,
+                            wrongProjectPath: String,
                             settings: ExecutionSettings,
                             vmOptions: java.util.List[String],
                             scriptParameters: java.util.List[String],
                             debuggerSetup: String,
                             listener: ExternalSystemTaskNotificationListener): Unit = {
 
+    val project = Option(id.findProject).getOrElse {
+      throw new ExternalSystemException(Bundle("sbt.remote.task.projectNotFound"))
+    }
+
     val runAsIs = scriptParameters.contains("as-is")
-    val moduleName = (!runAsIs).option {
-      Option(id.findProject).flatMap(findModuleByPath(_, projectPath)).flatMap(getModuleName)
+    val moduleQualifiedName = (!runAsIs).option {
+      findModuleByPath(project, wrongProjectPath).flatMap(getModuleName(project, _))
     }.flatten
+
 
     val logger = new Logger {
       def log(msg: String, level: Logger.Level, cause: Option[Throwable]): Unit = {
@@ -55,10 +60,10 @@ class TaskManager
       }
     }
 
-    if (!runAsIs && moduleName.isEmpty)
+    if (!runAsIs && moduleQualifiedName.isEmpty)
       throw new ExternalSystemException(Bundle("sbt.remote.task.projectScopeIsNotSet"))
 
-    executor = Some(new Executor(projectPath, moduleName, taskNames.asScala, settings, logger))
+    executor = Some(new Executor(project.getBasePath, moduleQualifiedName, taskNames.asScala, settings, logger))
     executor.foreach(e => Await.ready(e.run(), Duration.Inf))
   }
 
@@ -68,8 +73,13 @@ class TaskManager
     })
   }
 
-  private def getModuleName(module: Module): Option[String] =
-    Option(module.getOptionValue(ExternalSystemConstants.LINKED_PROJECT_ID_KEY))
+  private def getModuleName(project: Project, module: Module): Option[String] =
+    for {
+      systemSettings <- Option(SystemSettings(project))
+      projectSettings <- Option(systemSettings.getLinkedProjectSettings(project.getBasePath))
+      moduleNameMap = projectSettings.moduleNameToQualifiedNameMap
+      qualifiedName <- Option(moduleNameMap.get(module.getName))
+    } yield qualifiedName
 
   override def cancelTask(id: ExternalSystemTaskId,
                           listener: ExternalSystemTaskNotificationListener) =
