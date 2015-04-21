@@ -2,6 +2,7 @@ package com.dancingrobot84.sbt.remote
 package external
 
 import java.io.File
+import java.util.concurrent.CopyOnWriteArrayList
 
 import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
 import com.dancingrobot84.sbt.remote.project.extractors._
@@ -11,13 +12,15 @@ import com.intellij.openapi.externalSystem.model.task.{ ExternalSystemTaskId, Ex
 import com.intellij.openapi.externalSystem.model.{ DataNode, ExternalSystemException }
 import com.intellij.openapi.externalSystem.service.ImportCanceledException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
-import sbt.client.SbtClient
+import sbt.client.{Subscription, SbtClient}
 import sbt.protocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, Future, Promise }
 import scala.util.{ Failure, Success, Try }
+import scala.collection.JavaConverters._
+
 
 /**
  * @author Nikolay Obedin
@@ -60,6 +63,7 @@ object ProjectResolver {
 
     private val projectPromise = Promise[DataNode[ProjectData]]()
     private val cancelPromise = Promise[Unit]()
+    private val subscriptions = new CopyOnWriteArrayList[Subscription]()
 
     cancelPromise.future.onFailure {
       case exc: Exception => projectPromise.tryFailure(exc)
@@ -67,7 +71,7 @@ object ProjectResolver {
 
     def run(): Future[DataNode[ProjectData]] = {
         def onConnect(client: SbtClient): Unit = {
-          client.handleEvents {
+          subscriptions.add(client.handleEvents {
             case logE: LogEvent => logE.entry match {
               case LogStdOut(_) | LogStdErr(_) | LogSuccess(_) | LogTrace(_, _) =>
                 Log.warn(logE.entry.message)
@@ -76,7 +80,7 @@ object ProjectResolver {
               case _ =>
             }
             case _ =>
-          }
+          })
 
           val projectFile = new File(projectPath)
           val projectRef = new ProjectRef {
@@ -98,16 +102,24 @@ object ProjectResolver {
             else
               Seq(new ExternalDependenciesExtractor with SynchronizedContext)
 
-          val extraction = for {
-            _ <- basicsExtractor.attachOnce(client, projectRef, logger)
-            _ <- Future.sequence(mandatoryExtractors.map(_.attachOnce(client, projectRef, logger)))
-            _ <- Future.sequence(optionalExtractors.map(_.attachOnce(client, projectRef, logger)))
-          } yield Unit
+          // BasicsExtractor is special.
+          // It must be attached before any other extractor and awaited until finished.
+          // It is this way in order to create all necessary modules in project.
+          val (basicsFuture, basicsSubscription) = basicsExtractor.attach(client, projectRef, logger)
+          subscriptions.add(basicsSubscription)
 
-          extraction.onComplete { _ =>
-            basicsExtractor.detach()
-            mandatoryExtractors.foreach(_.detach())
-            optionalExtractors.foreach(_.detach())
+          val extraction = basicsFuture.flatMap { _ =>
+            if (projectPromise.isCompleted) {
+              Future.successful(Unit)
+            } else {
+              basicsSubscription.cancel()
+              val (futures, otherSubscriptions) =
+                (mandatoryExtractors ++ optionalExtractors)
+                .map(_.attach(client, projectRef, logger))
+                .unzip
+              subscriptions.addAll(otherSubscriptions.asJava)
+              Future.sequence(futures)
+            }
           }
 
           import DataNodeConversions._
@@ -119,14 +131,18 @@ object ProjectResolver {
 
       logger.info(Bundle("sbt.remote.import.connectingToServer"))
 
-      val subscription = SbtServerConnectionManager().getSbtConnectorFor(projectPath).open(onConnect, { (reconnect, reason) =>
+      val channelSubscription = SbtServerConnectionManager().getSbtConnectorFor(projectPath).open(onConnect, { (reconnect, reason) =>
+        subscriptions.asScala.foreach(_.cancel())
         if (reconnect)
           logger.warn(reason)
         else
           projectPromise.tryFailure(new ExternalSystemException(reason))
       })
 
-      projectPromise.future.onComplete(_ => subscription.cancel())
+      projectPromise.future.onComplete { _ =>
+        channelSubscription.cancel()
+        subscriptions.asScala.foreach(_.cancel())
+      }
       projectPromise.future
     }
 

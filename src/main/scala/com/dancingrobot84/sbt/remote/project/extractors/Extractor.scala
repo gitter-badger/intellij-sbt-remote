@@ -2,6 +2,8 @@ package com.dancingrobot84.sbt.remote
 package project
 package extractors
 
+import java.util.concurrent.CopyOnWriteArrayList
+
 import com.dancingrobot84.sbt.remote.project.structure.{ Project, ProjectRef }
 import sbt.client._
 import sbt.protocol.{ MinimalBuildStructure, MinimalProjectStructure, ProjectReference, ScopedKey }
@@ -29,19 +31,7 @@ trait Extractor {
    * It is user's responsibility to provide matching `client` and `projectRef`.
    * "No project found" error will be fired if `client` does not match `projectRef`.
    */
-  def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): Future[Unit]
-
-  /**
-   * Detach
-   * TODO: detach from specified project/client only
-   */
-  def detach(): Unit
-
-  def attachOnce(client: SbtClient, projectRef: ProjectRef, logger: Logger): Future[Unit] = {
-    val f = attach(client, projectRef, logger)
-    f.onComplete(_ => detach)
-    f
-  }
+  def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription)
 }
 
 /**
@@ -60,10 +50,10 @@ trait Context {
 abstract class ExtractorAdapter extends Extractor with Context {
   protected def doAttach(implicit ctx: Extractor.Context): Future[Unit]
 
-  private val subscriptions = mutable.Buffer.empty[Subscription]
+  private val subscriptions = new CopyOnWriteArrayList[Subscription]()
 
   protected def addSubscription(s: Subscription) =
-    subscriptions += s
+    subscriptions.add(s)
 
   type WatchResult[T] = (ScopedKey, Try[T])
 
@@ -137,7 +127,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
   }
 
   // TODO: check for being already attached
-  override def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): Future[Unit] = {
+  override def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription) = {
     val initPromise = Promise[Unit]()
 
     addSubscription(client.watchBuild {
@@ -149,11 +139,12 @@ abstract class ExtractorAdapter extends Extractor with Context {
           doAttach(getContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
     })
 
-    initPromise.future
+    (initPromise.future, new Subscription {
+      import scala.collection.JavaConverters._
+      override def cancel(): Unit =
+        subscriptions.asScala.foreach(_.cancel())
+    })
   }
-
-  override def detach(): Unit =
-    subscriptions.foreach(_.cancel())
 }
 
 /**
