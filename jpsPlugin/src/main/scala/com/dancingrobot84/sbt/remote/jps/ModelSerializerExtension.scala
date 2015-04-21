@@ -29,8 +29,13 @@ class ModelSerializerExtension extends JpsModelSerializerExtension {
 }
 
 object ModelSerializerExtension {
-  def deserializeProjectSettings(from: Elem): Option[SbtRemoteProjectSettings] =
-    (from \\ "ProjectSettings" \\ "option").find(_ \@ "name" == "externalProjectPath").map { pathNode =>
-      new SbtRemoteProjectSettings(pathNode \@ "value")
-    }
+  def deserializeProjectSettings(from: Elem): Option[SbtRemoteProjectSettings] = {
+    val options = (from \\ "ProjectSettings" \\ "option")
+    for {
+      projectPath <- options.find(_ \@ "name" == "externalProjectPath").map(_ \@ "value")
+      moduleNameMap <- options.find(_ \@ "name" == "moduleNameToQualifiedNameMap").map { mapNode =>
+        (mapNode \\ "entry").map { entryNode => (entryNode \@ "key", entryNode \@ "value")}.toMap
+      }
+    } yield new SbtRemoteProjectSettings(projectPath, moduleNameMap)
+  }
 }
