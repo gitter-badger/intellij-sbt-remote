@@ -19,8 +19,8 @@ import scala.util.{ Failure, Success, Try }
  * (say 'folder structure' or 'external dependencies') from server.
  * In the future when sbt server will be smart enough to reload automatically on build
  * changes and send us updated information we could get rid of ExternalSystem because
- * of its synchronous behaviour. That's why all these `attach/detach` methods for: to
- * dynamically enable/disable extractors on some project.
+ * of its synchronous behaviour. That's why `attach` method for: to
+ * dynamically enable/disable specified extractor on some project.
  *
  * @author: Nikolay Obedin
  * @since: 2/18/15.
@@ -30,6 +30,10 @@ trait Extractor {
    * Attach to specified sbt `client` which corresponds to IDEA's `projectRef`.
    * It is user's responsibility to provide matching `client` and `projectRef`.
    * "No project found" error will be fired if `client` does not match `projectRef`.
+   *
+   * Return tuple which consists of:
+   *    - future flag indicates whether extractor got all information it needs or not
+   *    - subscription allows to "detach" extractor from project
    */
   def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription)
 }
