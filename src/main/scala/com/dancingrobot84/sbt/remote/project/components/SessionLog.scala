@@ -9,7 +9,7 @@ import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionMa
 import com.dancingrobot84.sbt.remote.external.SystemSettings
 import com.intellij.openapi.components.AbstractProjectComponent
 import com.intellij.openapi.project.Project
-import sbt.client.SbtClient
+import sbt.client.{Subscription, SbtClient}
 import sbt.protocol._
 
 import scala.collection.JavaConverters._
@@ -32,9 +32,11 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
   override def projectOpened(): Unit = Option(SystemSettings(project)).foreach { settings =>
     val connectionManager = SbtServerConnectionManager()
     connectionManager.addConnectionListener(project.getBasePath, new ConnectionListener {
+      @volatile private var logSubscription: Option[Subscription] = None
       override def onConnect(): Unit =
-        connectionManager.getSbtConnectorFor(project.getBasePath).open(self.onConnect, self.onFailure)
-      override def onDisconnect(): Unit = {}
+        logSubscription = Some(connectionManager.getSbtConnectorFor(project.getBasePath).open(self.onConnect, self.onFailure))
+      override def onDisconnect(): Unit =
+        logSubscription.foreach(_.cancel())
     })
     connectionManager.ensureConnectionFor(project.getBasePath)
   }
