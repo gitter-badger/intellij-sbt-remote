@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-ps aux | grep launchers/sbt-launch | awk '{ print $2 }' | xargs kill -9
+PIDS=`ps aux | awk '/launchers\/sbt-launch/{ print $2 }'`
+echo $PIDS
+kill -9 $PIDS 2>/dev/null
