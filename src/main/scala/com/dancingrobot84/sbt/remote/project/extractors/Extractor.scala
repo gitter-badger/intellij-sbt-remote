@@ -43,7 +43,7 @@ trait Extractor {
  * See `Extractor.Context` documentation for more information about its goals.
  */
 trait Context {
-  def getContext(client: SbtClient, logger: Logger, acceptedProjects: Vector[MinimalProjectStructure], projectRef: ProjectRef): Extractor.Context
+  def createContext(client: SbtClient, logger: Logger, acceptedProjects: Vector[MinimalProjectStructure], projectRef: ProjectRef): Extractor.Context
 }
 
 /**
@@ -54,10 +54,8 @@ trait Context {
 abstract class ExtractorAdapter extends Extractor with Context {
   protected def doAttach(implicit ctx: Extractor.Context): Future[Unit]
 
-  private val subscriptions = new CopyOnWriteArrayList[Subscription]()
-
-  protected def addSubscription(s: Subscription) =
-    subscriptions.add(s)
+  protected def addSubscription(s: Subscription)(implicit ctx: Extractor.Context) =
+    ctx.subscriptions = ctx.subscriptions :+ s
 
   type WatchResult[T] = (ScopedKey, Try[T])
 
@@ -134,19 +132,24 @@ abstract class ExtractorAdapter extends Extractor with Context {
   override def attach(client: SbtClient, projectRef: ProjectRef, logger: Logger): (Future[Unit], Subscription) = {
     val initPromise = Promise[Unit]()
 
-    addSubscription(client.watchBuild {
+    var context: Option[Extractor.Context] = None
+    val buildSubscription = client.watchBuild {
       case MinimalBuildStructure(builds, allProjects) =>
         val acceptedProjects = allProjects.filter(_.plugins.contains("sbt.plugins.JvmPlugin"))
-        if (acceptedProjects.isEmpty)
+        if (acceptedProjects.isEmpty) {
           initPromise.failure(new Error(Bundle("sbt.remote.import.noSuitableModulesFound")))
-        else
-          doAttach(getContext(client, logger, acceptedProjects, projectRef)).onComplete(initPromise.tryComplete)
-    })
+        } else {
+          context = Some(createContext(client, logger, acceptedProjects, projectRef))
+          doAttach(context.get).onComplete(initPromise.tryComplete)
+        }
+    }
 
     (initPromise.future, new Subscription {
       import scala.collection.JavaConverters._
-      override def cancel(): Unit =
-        subscriptions.asScala.foreach(_.cancel())
+      override def cancel(): Unit = {
+        buildSubscription.cancel()
+        context.foreach(_.subscriptions.foreach(_.cancel()))
+      }
     })
   }
 }
@@ -156,13 +159,14 @@ abstract class ExtractorAdapter extends Extractor with Context {
  * executed on `projectRef` synchronization lock
  */
 trait SynchronizedContext extends Context {
-  override def getContext(client0: SbtClient,
+  override def createContext(client0: SbtClient,
                           logger0: Logger,
                           acceptedProjects0: Vector[MinimalProjectStructure],
                           projectRef0: ProjectRef) = new Extractor.Context {
     override val client = client0
     override val logger = logger0
     override val acceptedProjects = acceptedProjects0
+    @volatile override var subscriptions = Seq.empty[Subscription]
     override def withProject[T](trans: Project => T): T = projectRef0.synchronized {
       val result = trans(projectRef0.project)
       projectRef0.project = projectRef0.project.copy
@@ -193,6 +197,7 @@ object Extractor {
     val client: SbtClient
     val logger: Logger
     val acceptedProjects: Vector[MinimalProjectStructure]
+    var subscriptions: Seq[Subscription]
     def withProject[T](trans: Project => T): T
   }
 }
