@@ -1,5 +1,7 @@
 package com.dancingrobot84.sbt.remote.external
 
+import java.util
+
 import com.dancingrobot84.sbt.remote.Bundle
 import com.intellij.openapi.components._
 import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutionSettings
@@ -8,7 +10,7 @@ import com.intellij.openapi.externalSystem.settings._
 import com.intellij.openapi.project.Project
 import com.intellij.util.containers.ContainerUtilRt
 import com.intellij.util.messages.{ Topic => ExternalSystemTopic }
-import com.intellij.util.xmlb.annotations.AbstractCollection
+import com.intellij.util.xmlb.annotations.{MapAnnotation, AbstractCollection}
 
 import scala.beans.BeanProperty
 
@@ -70,12 +72,17 @@ final class ProjectSettings(
   @BeanProperty var resolveSbtClassifiers: Boolean)
     extends ExternalProjectSettings {
 
+  @BeanProperty
+  @MapAnnotation
+  var moduleNameToQualifiedNameMap: util.Map[String, String] = new util.HashMap[String, String]()
+
   def this() {
     this(false, false)
   }
 
   override def clone(): ExternalProjectSettings = {
     val result = new ProjectSettings(resolveClassifiers, resolveSbtClassifiers)
+    result.moduleNameToQualifiedNameMap.putAll(moduleNameToQualifiedNameMap)
     copyTo(result)
     result
   }

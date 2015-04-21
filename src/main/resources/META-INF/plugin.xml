@@ -26,6 +26,7 @@
         <externalSystemManager implementation="com.dancingrobot84.sbt.remote.external.ExternalSystemManager"/>
         <externalSystemTaskNotificationListener
                 implementation="com.dancingrobot84.sbt.remote.external.TaskNotificationListener"/>
+        <externalProjectDataService implementation="com.dancingrobot84.sbt.remote.external.services.ModuleIdService"/>
 
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.SystemSettings"/>
         <projectService serviceImplementation="com.dancingrobot84.sbt.remote.external.LocalSettings"/>
