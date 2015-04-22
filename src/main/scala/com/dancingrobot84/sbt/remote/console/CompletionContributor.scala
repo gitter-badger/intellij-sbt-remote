@@ -3,6 +3,7 @@ package console
 
 import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager
 import com.dancingrobot84.sbt.remote.external.SystemSettings
+import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.{ completion => idea }
 
@@ -32,7 +33,12 @@ class CompletionContributor extends idea.CompletionContributor {
 
       Await.result(completionsPromise.future, Duration.Inf).foreach { completion =>
         result.addElement(new LookupElement {
-          override def getLookupString: String = toComplete + completion
+          override def getLookupString: String =
+            toComplete + completion
+          override def handleInsert(context: InsertionContext): Unit = {
+            val offset = context.getStartOffset
+            context.getDocument.replaceString(offset, 2 * offset, "")
+          }
         })
       }
     }
