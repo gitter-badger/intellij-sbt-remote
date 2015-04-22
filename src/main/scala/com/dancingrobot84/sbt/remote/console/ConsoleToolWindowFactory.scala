@@ -10,7 +10,6 @@ import com.intellij.execution.impl.ConsoleViewImpl.ClearAllAction
 import com.intellij.execution.{ ui => UI }
 import com.intellij.openapi.actionSystem._
 import com.intellij.openapi.application.ex.ApplicationManagerEx
-import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.{ ToolWindow, ToolWindowFactory }

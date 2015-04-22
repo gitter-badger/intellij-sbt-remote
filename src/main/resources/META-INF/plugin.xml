@@ -46,6 +46,11 @@
                 factoryClass="com.dancingrobot84.sbt.remote.console.ConsoleToolWindowFactory"
                 conditionClass="com.dancingrobot84.sbt.remote.external.controls.ToolWindowCondition"/>
         <fileTypeFactory implementation="com.dancingrobot84.sbt.remote.console.SbtRemoteFileTypeFactory"/>
+        <lang.parserDefinition language="SbtRemote"
+                implementationClass="com.dancingrobot84.sbt.remote.console.PsiSbtRemoteParserDefinition"/>
+        <completion.contributor language="SbtRemote"
+                implementationClass="com.dancingrobot84.sbt.remote.console.CompletionContributor"
+                order="first" id="SbtRemoteCompletionContributor"/>
 
         <compileServer.plugin classpath="../jps-plugin.jar"/>
     </extensions>

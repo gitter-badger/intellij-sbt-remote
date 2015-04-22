@@ -3,8 +3,11 @@ package console
 
 import javax.swing.Icon
 
-import com.intellij.lang.Language
-import com.intellij.openapi.fileTypes.{FileTypeConsumer, FileTypeFactory, LanguageFileType}
+import com.intellij.extapi.psi.PsiFileBase
+import com.intellij.lang._
+import com.intellij.openapi.fileTypes._
+import com.intellij.psi.tree.{ IElementType, IFileElementType }
+import com.intellij.psi.{ FileViewProvider, PsiFile }
 
 /**
  * @author Nikolay Obedin
@@ -25,4 +28,19 @@ object SbtRemoteLanguageFileType extends LanguageFileType(SbtRemoteLanguage) {
 class SbtRemoteFileTypeFactory extends FileTypeFactory {
   override def createFileTypes(consumer: FileTypeConsumer): Unit =
     consumer.consume(SbtRemoteLanguageFileType, SbtRemoteLanguageFileType.getDefaultExtension)
+}
+
+class PsiSbtRemoteFile(provider: FileViewProvider) extends PsiFileBase(provider, SbtRemoteLanguage) {
+  override def getFileType: FileType = SbtRemoteLanguageFileType
+}
+
+class PsiSbtRemoteParserDefinition extends PlainTextParserDefinition {
+  override def createFile(viewProvider: FileViewProvider): PsiFile =
+    new PsiSbtRemoteFile(viewProvider)
+
+  override def getFileNodeType: IFileElementType = new IFileElementType(SbtRemoteLanguage) {
+    val PlainText = new IElementType("SbtRemotePlainText", SbtRemoteLanguage)
+    override def parseContents(chameleon: ASTNode): ASTNode =
+      ASTFactory.leaf(PlainText, chameleon.getChars)
+  }
 }
