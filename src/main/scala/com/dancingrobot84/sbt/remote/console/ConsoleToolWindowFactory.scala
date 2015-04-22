@@ -64,6 +64,7 @@ class ConsoleView(project: Project) extends LanguageConsoleImpl(project, Bundle(
   import SessionLog._
 
   getConsoleEditor.setOneLineMode(true)
+  setPrompt("sbt> ")
   Disposer.register(project, this)
 
   private val logListener = new LogListener {
