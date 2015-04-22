@@ -17,7 +17,7 @@ lazy val commonSettings: Seq[Setting[_]] =
   Seq(
     organization := "com.dancingrobot84",
     version := "0.0.1",
-    scalaVersion := "2.11.5",
+    scalaVersion := "2.11.6",
     javacOptions ++= Seq("-source", "1.6", "-target", "1.6"),
     scalacOptions ++= scalacOpts,
     ideaBuild := "141.177.4",
@@ -34,7 +34,7 @@ lazy val commonSettings: Seq[Setting[_]] =
         .setPreference(PreserveDanglingCloseParenthesis, true)
     },
     libraryDependencies ++= Seq(
-      "com.typesafe.sbtrc" % "client-2-11" % "1.0-32195589a00595c2bfd00c7ff10dc1dd8b99e2fd",
+      "com.typesafe.sbtrc" % "client-2-11" % "1.0-543625a608b99b6a4d3b3124f4f662b02411b3a3",
       "org.scala-sbt" %% "serialization" % "0.1.1"
     )
   )
@@ -54,7 +54,7 @@ lazy val ideaRunner: Project = project.in(file("ideaRunner"))
   .dependsOn(ideaPlugin % Provided)
   .dependsOn(jpsPlugin % Provided)
   .settings(
-    scalaVersion := "2.11.5",
+    scalaVersion := "2.11.6",
     autoScalaLibrary := false,
     unmanagedJars in Compile <<= ideaMainJars.in(ideaPlugin),
     unmanagedJars in Compile += file(System.getProperty("java.home")).getParentFile / "lib" / "tools.jar",

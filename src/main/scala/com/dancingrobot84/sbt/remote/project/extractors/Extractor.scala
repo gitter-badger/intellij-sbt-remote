@@ -134,7 +134,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
 
     var context: Option[Extractor.Context] = None
     val buildSubscription = client.watchBuild {
-      case MinimalBuildStructure(builds, allProjects) =>
+      case MinimalBuildStructure(builds, _, allProjects) =>
         val acceptedProjects = allProjects.filter(_.plugins.contains("sbt.plugins.JvmPlugin"))
         if (acceptedProjects.isEmpty) {
           initPromise.failure(new Error(Bundle("sbt.remote.import.noSuitableModulesFound")))
