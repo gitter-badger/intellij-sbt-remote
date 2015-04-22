@@ -10,7 +10,7 @@ import com.intellij.openapi.externalSystem.settings._
 import com.intellij.openapi.project.Project
 import com.intellij.util.containers.ContainerUtilRt
 import com.intellij.util.messages.{ Topic => ExternalSystemTopic }
-import com.intellij.util.xmlb.annotations.{MapAnnotation, AbstractCollection}
+import com.intellij.util.xmlb.annotations.{ MapAnnotation, AbstractCollection }
 
 import scala.beans.BeanProperty
 

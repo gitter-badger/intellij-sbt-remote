@@ -3,7 +3,7 @@ package com.dancingrobot84.sbt.remote.project.structure
 import java.io.File
 import java.net.URI
 
-import sbt.{protocol, ModuleID}
+import sbt.{ protocol, ModuleID }
 
 /**
  * Simplified representation of IDEA's project structure.

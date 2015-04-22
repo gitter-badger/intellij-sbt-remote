@@ -3,7 +3,7 @@ package project
 package extractors
 
 import com.dancingrobot84.sbt.remote.project.structure.Task
-import sbt.protocol.{ProjectReference, Completion}
+import sbt.protocol.{ ProjectReference, Completion }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

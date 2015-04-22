@@ -5,7 +5,7 @@ import java.util
 import org.jdom.Element
 import org.jdom.output.XMLOutputter
 import org.jetbrains.jps.model.JpsProject
-import org.jetbrains.jps.model.serialization.{JpsModelSerializerExtension, JpsProjectExtensionSerializer}
+import org.jetbrains.jps.model.serialization.{ JpsModelSerializerExtension, JpsProjectExtensionSerializer }
 
 import scala.collection.JavaConverters._
 import scala.xml._
@@ -34,7 +34,7 @@ object ModelSerializerExtension {
     for {
       projectPath <- options.find(_ \@ "name" == "externalProjectPath").map(_ \@ "value")
       moduleNameMap <- options.find(_ \@ "name" == "moduleNameToQualifiedNameMap").map { mapNode =>
-        (mapNode \\ "entry").map { entryNode => (entryNode \@ "key", entryNode \@ "value")}.toMap
+        (mapNode \\ "entry").map { entryNode => (entryNode \@ "key", entryNode \@ "value") }.toMap
       }
     } yield new SbtRemoteProjectSettings(projectPath, moduleNameMap)
   }

@@ -6,15 +6,13 @@ import java.net.URI
 import java.util
 
 import com.dancingrobot84.sbt.remote.external.services.ModuleIdService.ModuleIdData
-import com.intellij.openapi.externalSystem.model.{DataNode, ProjectKeys, Key, ProjectSystemId}
+import com.intellij.openapi.externalSystem.model.{ DataNode, ProjectKeys, Key, ProjectSystemId }
 import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData
 import com.intellij.openapi.externalSystem.service.project.manage.ProjectDataService
-import com.intellij.openapi.externalSystem.service.project.{ProjectStructureHelper, PlatformFacade}
+import com.intellij.openapi.externalSystem.service.project.{ ProjectStructureHelper, PlatformFacade }
 import com.intellij.openapi.project.Project
 
 import scala.collection.JavaConverters._
-
-
 
 /**
  * @author Nikolay Obedin
@@ -31,7 +29,7 @@ class ModuleIdService(platformFacade: PlatformFacade, helper: ProjectStructureHe
     toImport.asScala.foreach { dataNode =>
       val moduleData = dataNode.getData(getTargetDataKey)
       for {
-        systemSettings  <- Option(SystemSettings(project))
+        systemSettings <- Option(SystemSettings(project))
         projectSettings <- Option(systemSettings.getLinkedProjectSettings(moduleData.projectBase))
       } {
         val qualifiedName = s"{${moduleData.build}}${moduleData.id}"
@@ -42,7 +40,7 @@ class ModuleIdService(platformFacade: PlatformFacade, helper: ProjectStructureHe
 
 object ModuleIdService {
   case class ModuleIdData(owner: ProjectSystemId, projectBase: String, name: String, id: String, build: URI)
-      extends AbstractExternalEntityData(owner)
+    extends AbstractExternalEntityData(owner)
 
   val DataKey: Key[ModuleIdData] = new Key(classOf[ModuleIdData].getName, ProjectKeys.MODULE.getProcessingWeight + 1)
 }

@@ -160,9 +160,9 @@ abstract class ExtractorAdapter extends Extractor with Context {
  */
 trait SynchronizedContext extends Context {
   override def createContext(client0: SbtClient,
-                          logger0: Logger,
-                          acceptedProjects0: Vector[MinimalProjectStructure],
-                          projectRef0: ProjectRef) = new Extractor.Context {
+                             logger0: Logger,
+                             acceptedProjects0: Vector[MinimalProjectStructure],
+                             projectRef0: ProjectRef) = new Extractor.Context {
     override val client = client0
     override val logger = logger0
     override val acceptedProjects = acceptedProjects0

@@ -9,7 +9,7 @@ import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionMa
 import com.dancingrobot84.sbt.remote.external.SystemSettings
 import com.intellij.openapi.components.AbstractProjectComponent
 import com.intellij.openapi.project.Project
-import sbt.client.{Subscription, SbtClient}
+import sbt.client.{ Subscription, SbtClient }
 import sbt.protocol._
 
 import scala.collection.JavaConverters._

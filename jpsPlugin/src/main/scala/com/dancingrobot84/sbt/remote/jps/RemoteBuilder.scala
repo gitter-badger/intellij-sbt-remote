@@ -59,7 +59,7 @@ class RemoteBuilder extends ModuleLevelBuilder(BuilderCategory.SOURCE_GENERATOR)
   override def getPresentableName: String = Bundle("sbt.remote.jps.builderName")
 
   private def onConnect(modules: Set[String], donePromise: Promise[ExitCode])(client: SbtClient)(
-      implicit context: CompileContext): Unit = {
+    implicit context: CompileContext): Unit = {
     checkCanceled(client, donePromise, -1)
     var jobId: Long = -1
 
@@ -104,7 +104,7 @@ class RemoteBuilder extends ModuleLevelBuilder(BuilderCategory.SOURCE_GENERATOR)
           Bundle("sbt.remote.jps.taskFailed", taskName)
       }
       progressMessage(message)
-    case logEvent : LogEvent if !logEvent.entry.message.startsWith("Read from stdout:") =>
+    case logEvent: LogEvent if !logEvent.entry.message.startsWith("Read from stdout:") =>
       logEvent.entry match {
         case LogMessage(level, message) if level != LogMessage.DEBUG =>
           progressMessage(s"[$level] $message")
@@ -114,14 +114,14 @@ class RemoteBuilder extends ModuleLevelBuilder(BuilderCategory.SOURCE_GENERATOR)
   }
 
   private def onFailure(donePromise: Promise[ExitCode])(reconnecting: Boolean, cause: String)(
-      implicit context: CompileContext): Unit = {
+    implicit context: CompileContext): Unit = {
     context.processMessage(new BuildMessage(cause, BuildMessage.Kind.WARNING) {})
     if (!reconnecting)
       donePromise.trySuccess(ExitCode.ABORT)
   }
 
   private def checkCanceled(client: SbtClient, donePromise: Promise[ExitCode], jobId: Long)(
-      implicit context: CompileContext): Unit =
+    implicit context: CompileContext): Unit =
     if (context.getCancelStatus.isCanceled) {
       if (jobId != -1) {
         val isCancelled = !Await.result(client.cancelExecution(jobId), Duration.Inf)

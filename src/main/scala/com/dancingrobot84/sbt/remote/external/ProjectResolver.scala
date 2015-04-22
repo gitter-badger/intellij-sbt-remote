@@ -12,7 +12,7 @@ import com.intellij.openapi.externalSystem.model.task.{ ExternalSystemTaskId, Ex
 import com.intellij.openapi.externalSystem.model.{ DataNode, ExternalSystemException }
 import com.intellij.openapi.externalSystem.service.ImportCanceledException
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
-import sbt.client.{Subscription, SbtClient}
+import sbt.client.{ Subscription, SbtClient }
 import sbt.protocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,7 +20,6 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, Future, Promise }
 import scala.util.{ Failure, Success, Try }
 import scala.collection.JavaConverters._
-
 
 /**
  * @author Nikolay Obedin
@@ -115,8 +114,8 @@ object ProjectResolver {
               basicsSubscription.cancel()
               val (futures, otherSubscriptions) =
                 (mandatoryExtractors ++ optionalExtractors)
-                .map(_.attach(client, projectRef, logger))
-                .unzip
+                  .map(_.attach(client, projectRef, logger))
+                  .unzip
               subscriptions.addAll(otherSubscriptions.asJava)
               Future.sequence(futures)
             }

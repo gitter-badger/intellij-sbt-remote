@@ -47,7 +47,6 @@ class TaskManager
       findModuleByPath(project, wrongProjectPath).flatMap(getModuleName(project, _))
     }.flatten
 
-
     val logger = new Logger {
       def log(msg: String, level: Logger.Level, cause: Option[Throwable]): Unit = {
         val isStdOut = level match {
