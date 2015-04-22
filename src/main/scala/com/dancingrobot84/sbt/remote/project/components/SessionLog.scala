@@ -71,6 +71,13 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
             addMessage(Message.Log(Logger.Level.fromString(level), message))
           case _ => // ignore
         }
+      case TaskStarted(_, _, Some(ScopedKey(key, SbtScope(_, project, config, task)))) =>
+        var qualifiedKey = ""
+        project.foreach(it => qualifiedKey += s"{${it.build}}${it.name}/")
+        config.foreach(it => qualifiedKey += s"$it:")
+        task.foreach(it => qualifiedKey ++ s"$it::")
+        qualifiedKey += key.name
+        addMessage(Message.Stdout(s"> $qualifiedKey"))
       case _ => // ignore
     }
   }
