@@ -10,7 +10,6 @@ import com.intellij.execution.impl.ConsoleViewImpl.ClearAllAction
 import com.intellij.execution.{ ui => UI }
 import com.intellij.openapi.actionSystem._
 import com.intellij.openapi.application.ex.ApplicationManagerEx
-import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.{ ToolWindow, ToolWindowFactory }
@@ -61,7 +60,7 @@ class ConsoleToolWindowFactory extends ToolWindowFactory {
   }
 }
 
-class ConsoleView(project: Project) extends LanguageConsoleImpl(project, Bundle("sbt.remote.console.title"), PlainTextLanguage.INSTANCE) {
+class ConsoleView(project: Project) extends LanguageConsoleImpl(project, Bundle("sbt.remote.console.title"), SbtRemoteLanguage) {
   import SessionLog._
 
   getConsoleEditor.setOneLineMode(true)
