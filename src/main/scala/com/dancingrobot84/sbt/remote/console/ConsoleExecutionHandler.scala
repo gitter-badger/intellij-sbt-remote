@@ -28,7 +28,7 @@ class ConsoleExecutionHandler(project: Project) extends BaseConsoleExecuteAction
     cancelPromise = Some(Promise())
 
     console.setEditable(false)
-    val subscription = SbtServerConnectionManager().getSbtConnectorFor(project.getBasePath).open({ client =>
+    val subscription = SbtServerConnectionManager().makeSbtConnectorFor(project.getBasePath).open({ client =>
       for {
         id0 <- client.requestExecution(text, None)
       } {

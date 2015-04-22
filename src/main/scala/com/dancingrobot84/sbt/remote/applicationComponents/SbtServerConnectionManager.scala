@@ -27,12 +27,12 @@ class SbtServerConnectionManager extends ApplicationComponent.Adapter {
   /**
    * Ensure that sbt server connection for specified path is established
    */
-  def ensureConnectionFor(path: String): Unit = getSbtConnectorFor(path)
+  def ensureConnectionFor(path: String): Unit = makeSbtConnectorFor(path)
 
   /**
    * Get running SbtConnector for specified path or create one
    */
-  def getSbtConnectorFor(path: String): SbtConnectorEx = connectorsPoolLock.synchronized {
+  def makeSbtConnectorFor(path: String): SbtConnectorEx = connectorsPoolLock.synchronized {
     connectorsPool.get(path) match {
       case Some(connector) =>
         connector
@@ -54,6 +54,12 @@ class SbtServerConnectionManager extends ApplicationComponent.Adapter {
         connector
     }
   }
+
+  /**
+   * Check whether there is connection established for specified path
+   */
+  def getSbtConnectorFor(path: String): Option[SbtConnectorEx] =
+    connectorsPoolLock.synchronized(connectorsPool.get(path))
 
   /**
    * Add SbtConnector state change listener for specified path

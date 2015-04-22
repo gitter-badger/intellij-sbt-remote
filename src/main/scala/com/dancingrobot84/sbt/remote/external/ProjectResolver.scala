@@ -131,7 +131,7 @@ object ProjectResolver {
 
       logger.info(Bundle("sbt.remote.import.connectingToServer"))
 
-      val channelSubscription = SbtServerConnectionManager().getSbtConnectorFor(projectPath).open(onConnect, { (reconnect, reason) =>
+      val channelSubscription = SbtServerConnectionManager().makeSbtConnectorFor(projectPath).open(onConnect, { (reconnect, reason) =>
         subscriptions.asScala.foreach(_.cancel())
         if (reconnect)
           logger.warn(reason)

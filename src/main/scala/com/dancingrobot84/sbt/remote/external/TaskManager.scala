@@ -102,7 +102,7 @@ object TaskManager {
     private val shouldCancelPromise = Promise[Unit]()
 
     def run(): Future[Unit] = {
-      val connector = SbtServerConnectionManager().getSbtConnectorFor(projectPath)
+      val connector = SbtServerConnectionManager().makeSbtConnectorFor(projectPath)
 
         def onConnect(client: SbtClient): Unit = {
           var currentTask: Option[(Long, String)] = None
