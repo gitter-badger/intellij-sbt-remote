@@ -50,6 +50,7 @@ class StatefulModule(val base: File, val id: Module.Id, var name: String) extend
   private val tasks0 = mutable.Set.empty[Task]
   var scalacOptions: Seq[String] = Seq.empty
   var scalaSdk: Option[ScalaSdk] = None
+  var buildImports: Seq[String] = Seq.empty
 
   override def addPath(path: Path) =
     paths0 += path

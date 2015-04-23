@@ -3,8 +3,8 @@ package com.dancingrobot84.sbt.remote.external
 import java.io.File
 
 import com.dancingrobot84.sbt.remote.external
-import com.dancingrobot84.sbt.remote.external.services.ModuleIdService
-import com.dancingrobot84.sbt.remote.external.services.ModuleIdService.ModuleIdData
+import com.dancingrobot84.sbt.remote.external.services.ModuleExtService
+import com.dancingrobot84.sbt.remote.external.services.ModuleExtService.ModuleExtData
 import com.dancingrobot84.sbt.remote.project.structure._
 import com.intellij.openapi.externalSystem.model.project._
 import com.intellij.openapi.externalSystem.model.task.TaskData
@@ -41,8 +41,9 @@ object DataNodeConversions {
       } moduleNode.addChild(depNode)
 
       project.modules.foreach { module =>
-        val moduleIdData = new ModuleIdData(Id, baseFile.getAbsolutePath, module.name, module.id.name, module.id.build)
-        projectNode.addChild(new DataNode(ModuleIdService.DataKey, moduleIdData, projectNode))
+        val moduleExtData = new ModuleExtData(Id, baseFile.getAbsolutePath,
+          module.name, module.id.name, module.id.build, module.buildImports)
+        projectNode.addChild(new DataNode(ModuleExtService.DataKey, moduleExtData, projectNode))
       }
 
       libraryNodes.foreach(projectNode.addChild)

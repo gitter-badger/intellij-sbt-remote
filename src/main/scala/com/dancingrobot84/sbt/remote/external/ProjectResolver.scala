@@ -89,6 +89,7 @@ object ProjectResolver {
           val basicsExtractor = new BasicsExtractor with SynchronizedContext
 
           val mandatoryExtractors = Seq(
+            new BuildExtractor with SynchronizedContext,
             new InternalDependenciesExtractor with SynchronizedContext,
             new TasksExtractor with SynchronizedContext)
 

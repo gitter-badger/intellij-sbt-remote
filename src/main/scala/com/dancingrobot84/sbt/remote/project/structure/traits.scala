@@ -44,6 +44,7 @@ trait Module {
   var name: String
   var scalacOptions: Seq[String]
   var scalaSdk: Option[ScalaSdk]
+  var buildImports: Seq[String]
 
   def addPath(path: Path): Unit
   def removePath(path: Path): Unit
@@ -96,6 +97,9 @@ object Library {
 
     def fromSbtModuleId(moduleId: ModuleID) =
       Id(moduleId.organization, moduleId.name, moduleId.revision, 0)
+
+    def forBuildJars(build: URI) =
+      Id("build-jars", build.getPath, "", 0)
   }
 }
 
