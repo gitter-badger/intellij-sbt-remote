@@ -34,7 +34,9 @@ class SessionLog(project: Project) extends AbstractProjectComponent(project) { s
     connectionManager.addConnectionListener(project.getBasePath, new ConnectionListener {
       @volatile private var logSubscription: Option[Subscription] = None
       override def onConnect(): Unit =
-        logSubscription = Some(connectionManager.makeSbtConnectorFor(project.getBasePath).open(self.onConnect, self.onFailure))
+        if (!project.isDisposed)
+          logSubscription = Some(connectionManager.makeSbtConnectorFor(project.getBasePath)
+            .open(self.onConnect, self.onFailure))
       override def onDisconnect(): Unit =
         logSubscription.foreach(_.cancel())
     })
