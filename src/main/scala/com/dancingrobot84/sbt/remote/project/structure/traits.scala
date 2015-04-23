@@ -96,6 +96,9 @@ object Library {
 
     def fromSbtModuleId(moduleId: ModuleID) =
       Id(moduleId.organization, moduleId.name, moduleId.revision, 0)
+
+    def forBuildJars(build: URI) =
+      Id("build-jars", build.getPath, "", 0)
   }
 }
 
