@@ -35,7 +35,7 @@ lazy val commonSettings: Seq[Setting[_]] =
     },
     resolvers += Resolver.typesafeIvyRepo("releases"),
     libraryDependencies ++= Seq(
-      "com.typesafe.sbtrc" % "client-2-11" % "1.0-d426ad28ec32d87818a32c63eb582e2bfb6e97ef",
+      "com.typesafe.sbtrc" % "client-2-11" % "1.0-4ffc703b0215bb925bfcc91610d7d0235702495d",
       "org.scala-sbt" %% "serialization" % "0.1.1"
     )
   )
