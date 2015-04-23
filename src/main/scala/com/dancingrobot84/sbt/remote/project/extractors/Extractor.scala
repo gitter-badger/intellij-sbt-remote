@@ -138,7 +138,7 @@ abstract class ExtractorAdapter extends Extractor with Context {
         val acceptedProjects = allProjects.filter(_.plugins.contains("sbt.plugins.JvmPlugin"))
         if (acceptedProjects.isEmpty) {
           initPromise.failure(new Error(Bundle("sbt.remote.import.noSuitableModulesFound")))
-        } else {
+        } else if (context.isEmpty) {
           context = Some(createContext(client, logger, acceptedProjects, projectRef))
           doAttach(context.get).onComplete(initPromise.tryComplete)
         }
