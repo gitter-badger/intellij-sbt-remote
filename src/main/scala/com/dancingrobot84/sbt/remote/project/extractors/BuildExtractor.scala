@@ -20,13 +20,16 @@ abstract class BuildExtractor extends ExtractorAdapter {
     addSubscription(ctx.client.watchBuild {
       case MinimalBuildStructure(builds, buildData, _) => withProject { project =>
         for {
-          BuildData(build, classpath, _) <- buildData
+          BuildData(build, classpath, imports) <- buildData
           module <- project.modules.find(_.id.build == build)
           libId = Library.Id.forBuildJars(build)
           library = project.addLibrary(libId)
         } {
+          // Leave files only because we don't need 'target' directories in resolution
           classpath.filter(_.isFile).map(Artifact.Binary).foreach(library.addArtifact)
           module.addDependency(Dependency.Library(libId, Configuration.Provided))
+          // Scala plugin expects imports without "import" keyword
+          module.buildImports = imports.map(_.substring(7))
         }
         donePromise.trySuccess(Unit)
       }

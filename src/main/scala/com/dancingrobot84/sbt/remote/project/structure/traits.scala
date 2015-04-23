@@ -44,6 +44,7 @@ trait Module {
   var name: String
   var scalacOptions: Seq[String]
   var scalaSdk: Option[ScalaSdk]
+  var buildImports: Seq[String]
 
   def addPath(path: Path): Unit
   def removePath(path: Path): Unit
