@@ -33,8 +33,9 @@ lazy val commonSettings: Seq[Setting[_]] =
         .setPreference(IndentPackageBlocks, false)
         .setPreference(PreserveDanglingCloseParenthesis, true)
     },
+    resolvers += Resolver.typesafeIvyRepo("releases"),
     libraryDependencies ++= Seq(
-      "com.typesafe.sbtrc" % "client-2-11" % "1.0-543625a608b99b6a4d3b3124f4f662b02411b3a3",
+      "com.typesafe.sbtrc" % "client-2-11" % "1.0-d426ad28ec32d87818a32c63eb582e2bfb6e97ef",
       "org.scala-sbt" %% "serialization" % "0.1.1"
     )
   )
@@ -45,7 +46,6 @@ lazy val ideaPlugin: Project = project.in(file("."))
   .settings(
     name := "idea-plugin",
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala=false),
-    resolvers += Resolver.typesafeIvyRepo("releases"),
     libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.1",
     aggregate in updateIdea := false
   )
