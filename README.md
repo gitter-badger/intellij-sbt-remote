@@ -12,7 +12,7 @@ could build it yourself.
 ### Building patched sbt-remote-control
 
 1. Clone `dancingrobot84/sbt-remote-control`
-2. Switch to `feature/build-information` branch
+2. Switch to `hack/bundled-server` branch
 3. Do `publishLocal` in SBT repl
 
 ### Building plugin

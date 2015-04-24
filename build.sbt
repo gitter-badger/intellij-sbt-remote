@@ -11,6 +11,8 @@ lazy val scalacOpts = Seq(
   "-Xlint"
 )
 
+lazy val sbtRemoteVersion = "1.0-13ae835d2a838b026dc0b2faa7a6100195ed5169"
+
 lazy val commonSettings: Seq[Setting[_]] =
   ideaPluginSettings ++
   scalariformSettings ++
@@ -35,7 +37,7 @@ lazy val commonSettings: Seq[Setting[_]] =
     },
     resolvers += Resolver.typesafeIvyRepo("releases"),
     libraryDependencies ++= Seq(
-      "com.typesafe.sbtrc" % "client-2-11" % "1.0-4ffc703b0215bb925bfcc91610d7d0235702495d",
+      "com.typesafe.sbtrc" % "client-2-11" % sbtRemoteVersion,
       "org.scala-sbt" %% "serialization" % "0.1.1"
     )
   )
@@ -72,6 +74,11 @@ lazy val jpsPlugin: Project = project.in(file("jpsPlugin"))
     }
   )
 
+lazy val bundledServer: Project = project.in(file("bundledServer"))
+  .settings(
+    libraryDependencies += "com.typesafe.sbtrc" % "server-0-13" % sbtRemoteVersion
+  )
+
 updateIdea in ideaPlugin <<= (updateIdea in ideaPlugin, ideaBaseDirectory in ideaPlugin, ideaBuild in ideaPlugin, streams) map { (_, base, build, streams) =>
   val scalaPluginUrl = url("https://plugins.jetbrains.com/files/1347/19130/scala-intellij-bin-1.4.15.zip")
   val scalaPluginZipFile = base / "archives" / "scala-plugin.zip"
@@ -88,13 +95,34 @@ updateIdea in ideaPlugin <<= (updateIdea in ideaPlugin, ideaBaseDirectory in ide
 
 lazy val packagePlugin = TaskKey[File]("package-plugin", "Create plugin's zip file ready to load into IDEA")
 
-packagePlugin in ideaPlugin <<= (assembly in jpsPlugin, assembly in ideaPlugin, target in ideaPlugin) map { (jpsJar, ideaJar, target) =>
-  val pluginName = "intellij-sbt-remote"
-  val sources = Seq(
-    ideaJar -> s"$pluginName/lib/${ideaJar.getName}",
-    jpsJar  -> s"$pluginName/${jpsJar.getName}"
-  )
-  val out = target / s"$pluginName-plugin.zip"
-  IO.zip(sources, out)
-  out
-}
+packagePlugin in ideaPlugin <<= (assembly in jpsPlugin,
+                                 assembly in ideaPlugin,
+                                 target in ideaPlugin,
+                                 ivyPaths,
+                                 update in bundledServer in Compile) map
+  { (jpsJar, ideaJar, target, paths, serverArtifacts) =>
+    val pluginName = "intellij-sbt-remote"
+    val ivyLocal = paths.ivyHome.getOrElse(file(System.getProperty("user.home")) / ".ivy2") / "local"
+    val sources = Seq(
+      ideaJar -> s"$pluginName/lib/${ideaJar.getName}",
+      jpsJar  -> s"$pluginName/${jpsJar.getName}"
+    ) ++
+      serverArtifacts.configuration(Compile.name)
+        .fold(Seq.empty[ModuleReport])(_.modules)
+        .flatMap { moduleReport =>
+          val id = moduleReport.module
+          moduleReport.artifacts.flatMap { case (artifact, jar) =>
+            val baseDir = s"$pluginName/server/${id.organization}/${id.name}/${id.revision}"
+            if (jar.relativeTo(ivyLocal).isDefined) {
+              val ivyXml = jar.getParentFile.getParentFile / "ivys" / "ivy.xml"
+              Seq(jar -> s"$baseDir/${artifact.name}.${artifact.extension}",
+                  ivyXml -> s"$baseDir/ivy.xml")
+            } else {
+              Seq.empty
+            }
+          }
+        }
+    val out = target / s"$pluginName-plugin.zip"
+    IO.zip(sources, out)
+    out
+  }

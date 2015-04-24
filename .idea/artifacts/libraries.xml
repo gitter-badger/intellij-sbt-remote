@@ -15,7 +15,7 @@
       <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-sbt/launcher-interface/jars/launcher-interface-0.13.8.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.json4s/json4s-core_2.11/jars/json4s-core_2.11-3.2.10.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.5.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$USER_HOME$/.ivy2/local/com.typesafe.sbtrc/client-2-11/1.0-543625a608b99b6a4d3b3124f4f662b02411b3a3/jars/client-2-11.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.ivy2/local/com.typesafe.sbtrc/client-2-11/1.0-13ae835d2a838b026dc0b2faa7a6100195ed5169/jars/client-2-11.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

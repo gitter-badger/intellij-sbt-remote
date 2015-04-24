@@ -1,8 +1,15 @@
-package com.dancingrobot84.sbt.remote.applicationComponents
+package com.dancingrobot84.sbt.remote
+package applicationComponents
+
+import java.io._
 
 import com.dancingrobot84.sbt.remote.applicationComponents.SbtServerConnectionManager.ConnectionListener
+import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ApplicationComponent
+import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
+import com.intellij.openapi.util.registry.Registry
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -19,6 +26,24 @@ class SbtServerConnectionManager extends ApplicationComponent.Adapter {
 
   private val listeners = mutable.HashMap.empty[String, mutable.Set[ConnectionListener]]
   private val listenersLock = new Object
+
+  override def initComponent(): Unit = {
+    // FIXME: hack to feed sbt-launcher with our local repo
+    val pluginPath = PluginManager.getPlugin(PluginId.getId("com.dancingrobot84.intellij-sbt-remote")).getPath
+    val repo = s"idea: file://$pluginPath/server, [organization]/[module]/[revision]/[artifact].[ext]"
+
+    Registry.get(external.Id.getId + ExternalSystemConstants.USE_IN_PROCESS_COMMUNICATION_REGISTRY_KEY_SUFFIX).setValue(true);
+
+    val properties = {
+      val props = sbt.IO.readStream(getClass.getClassLoader.getResourceAsStream("sbt-server.properties")).split('\n')
+      val (before, after) = props.splitAt(props.indexOf("[repositories]") + 1)
+      (before ++ Seq(s"  $repo") ++ after).mkString("\n")
+    }
+
+    val propertiesFile = new File(pluginPath, "sbt-server.fixed.properties")
+    sbt.IO.write(propertiesFile, properties)
+    System.setProperty("sbt.server.properties.file", propertiesFile.getAbsolutePath)
+  }
 
   override def disposeComponent(): Unit = connectorsPoolLock.synchronized {
     connectorsPool.foreach { case (_, connector) => connector.close() }
