@@ -5,7 +5,7 @@ package extractors
 import com.dancingrobot84.sbt.remote.project.structure._
 import sbt.protocol._
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ Future, Promise }
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -21,7 +21,7 @@ abstract class BuildExtractor extends ExtractorAdapter {
       case MinimalBuildStructure(builds, buildData, _) => withProject { project =>
         for {
           BuildData(build, classpath, imports) <- buildData
-          module <- project.modules.find(_.id.build == build)
+          module <- project.modules.filter(_.id.build == build)
           libId = Library.Id.forBuildJars(build)
           library = project.addLibrary(libId)
         } {
