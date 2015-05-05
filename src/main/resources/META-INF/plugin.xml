@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.dancingrobot84.intellij-sbt-remote</id>
     <name>Intellij SBT Remote</name>
-    <version>1.0</version>
+    <version>0.0.1</version>
     <vendor email="dancingrobot84@gmail.com" url="http://dancingrobot84.com">Nikolay Obedin</vendor>
 
     <description>SBT support plugin for Intellij IDEA via sbt-remote-control</description>
