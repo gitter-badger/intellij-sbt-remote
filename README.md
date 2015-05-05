@@ -1,5 +1,7 @@
 # intellij-sbt-remote
 
+[![Join the chat at https://gitter.im/dancingrobot84/intellij-sbt-remote](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dancingrobot84/intellij-sbt-remote?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 SBT support plugin for Intellij IDEA via sbt-remote-control. WIP.
 
 ## Installation
